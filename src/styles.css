@@ -149,3 +149,33 @@ table.t td.num { text-align: right; font-variant-numeric: tabular-nums; white-sp
   body { background: #fff; }
   .sheet, .kpi { border-color: #ccc; }
 }
+
+/* ---- guided demo (src/ui/Demo.tsx) ---- */
+.accent-btn { background: var(--accent); color: var(--accent-ink); border-color: transparent; box-shadow: var(--accent-shadow); }
+.accent-btn:hover { background: #b06e33; }
+.demo { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); width: min(720px, calc(100% - 32px)); z-index: 15;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); box-shadow: var(--shadow);
+  padding: 14px 18px 12px; backdrop-filter: blur(6px); }
+.demo-top { display: flex; align-items: baseline; gap: 10px; }
+.demo-count { font-size: 11px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.demo-title { font-size: 17px; font-weight: 650; letter-spacing: -0.01em; }
+.demo-body { margin: 6px 0 10px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.demo-progress { height: 3px; border-radius: 3px; background: var(--chip-on); overflow: hidden; }
+.demo-progress i { display: block; height: 100%; width: 0; background: var(--accent); }
+.demo-progress i.run { animation: demo-fill linear forwards; }
+@keyframes demo-fill { from { width: 0; } to { width: 100%; } }
+.demo-ctl { display: flex; gap: 8px; margin-top: 10px; justify-content: center; }
+.demo-ctl .chip { height: 40px; }
+.demo-ctl .chip.square { width: 40px; }
+.demo-ctl .chip:disabled { opacity: 0.4; cursor: default; }
+.demo-unclean { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border: 0; border-radius: 6px;
+  background: transparent; color: var(--ink-3); opacity: 0; cursor: pointer; }
+.demo-unclean:hover { opacity: 1; }
+.demo-legend-in { justify-content: flex-start; margin: -2px 0 10px; font-size: 11px; }
+.in-demo .card { top: 76px; }
+.clean-frame .top-actions, .clean-frame .card .close, .clean-frame .panel .close { display: none; }
+.clean-frame canvas { cursor: none !important; }
+.with-demo .page { padding-bottom: 220px; }
+@media (max-width: 640px) {
+  .demo-body { font-size: 13px; }
+}

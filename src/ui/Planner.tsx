@@ -1,5 +1,5 @@
 // Planner view interface: top bar, scenario dock, zone / pond card, Adjust panel (live mode) and About drawer.
-import { CloudRain, Droplet, FileText, Info, Home, Mountain, SlidersHorizontal, Sun, Waves, X } from "lucide-react";
+import { CloudRain, Droplet, FileText, Info, Home, Mountain, PlayCircle, SlidersHorizontal, Sun, Waves, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { BAND_COLOR, SCENARIOS, zoneLook, type Adjust, type ScenarioId } from "../lib/data";
 import { change, drainsTo, m3, num } from "../lib/format";
@@ -14,7 +14,7 @@ export function Wordmark() {
   );
 }
 
-export function TopBar(p: { illustrative: boolean; live: boolean; onAbout: () => void }) {
+export function TopBar(p: { illustrative: boolean; live: boolean; onAbout: () => void; onDemo: () => void }) {
   return (
     <div className="topbar">
       <div className="brand">
@@ -25,6 +25,7 @@ export function TopBar(p: { illustrative: boolean; live: boolean; onAbout: () =>
         <div className="tagline">Property lines stop at the fence. Water doesn't. A simulated township loosely based on Bandar Bukit Raja.</div>
       </div>
       <div className="top-actions">
+        <button className="text-btn accent-btn" onClick={p.onDemo}><PlayCircle size={16} /><span className="lbl">Guided demo</span></button>
         <a className="text-btn" href="#/brief"><FileText size={16} /><span className="lbl">Brief</span></a>
         <a className="text-btn" href="#/resident"><Home size={16} /><span className="lbl">Residents</span></a>
         <button className="icon-btn" onClick={p.onAbout} aria-label="About these numbers"><Info size={18} /></button>
