@@ -8,6 +8,7 @@ import { adjustedInputs, changedInputs, loadAll, results as computeResults, scen
 import { Township, type Anchors, type Layers, type Pick, type V3 } from "./scene/Township";
 import { EXT_ORIGIN, Overlays, Pointers, type PointAt } from "./scene/Overlays";
 import { Rain } from "./scene/Rain";
+import { WaterBackdrop } from "./scene/WaterBackdrop";
 import { About, Card, Legend, Results } from "./ui/Planner";
 import { ControlPanel } from "./ui/Controls";
 import { Footer, LayersPanel, Rail, StatusBar, Ticker, type Panel } from "./ui/Shell";
@@ -222,6 +223,7 @@ export default function App() {
   const points: PointAt[] = (step?.points ?? flash).map((p) => (typeof p.at === "string" && extra[p.at] ? { ...p, at: extra[p.at] } : p));
   return (
     <div className={`app ${demo !== null ? "in-demo" : ""} ${clean ? "clean-frame" : ""} ${panel ? "has-panel" : ""}`}>
+      <WaterBackdrop />
       <div className="stage">
         <Canvas shadows gl={{ antialias: true, alpha: true }} dpr={[1, 2]}>
           <hemisphereLight args={["#dfe8f5", "#1b2230", 0.85]} />

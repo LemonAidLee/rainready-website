@@ -10,7 +10,7 @@ const STEPS: { msgs: Msg[]; replies: string[] }[] = [
     replies: ["Blocked drain", "Flooded street"] },
   { msgs: [{ me: true, text: "Blocked drain" }, { text: "Thanks. Please share a photo and your location (or the street name)." }],
     replies: ["📷 Photo + 📍 location"] },
-  { msgs: [{ me: true, text: "📷 photo · 📍 Spot 2 street", small: "example" },
+  { msgs: [{ me: true, text: "📷 photo · 📍 Spot 1 street", small: "example" },
            { text: "Got it. Your association's volunteer will check it, then it goes to the official channel for this drain with a link. Reference RR-EXAMPLE.", small: "status: received" }],
     replies: ["Track my report"] },
   { msgs: [{ me: true, text: "Track my report" },
@@ -37,7 +37,7 @@ function MoveNow() {
   const items = ["Move the car to the example higher-ground spot", "Lift valuables and documents off the floor", "Switch off the mains if water may enter", "Check on neighbours who may need help"];
   return (
     <div className="phone" data-spot="phone-move"><div className="screen">
-      <div className="bar"><span>Move-now plan · Spot 2 street</span><span className="example">EXAMPLE</span></div>
+      <div className="bar"><span>Move-now plan · Spot 1 street</span><span className="example">EXAMPLE</span></div>
       <div className="msgs">
         <div className="msg" style={{ maxWidth: "100%" }}>
           <b>An official flood warning covers your area.</b> This plan only builds on it, and it is not a forecast.
