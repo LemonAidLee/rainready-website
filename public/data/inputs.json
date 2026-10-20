@@ -48,9 +48,9 @@
         "value": "2913001",
         "unit": "-",
         "status": "assumed",
-        "source": "Nearest Selangor gauge in Table 2.B1 to BBR (3.09 N, 101.44 E), judged from the JPS station-number grid (29 = 2.9 N, 13 = 101.3 E): about 20 km south-west, in Klang district, coastal like BBR. Neighbours 3314001 and 2815001 give a sensitivity range",
+        "source": "Nearest Selangor gauge in Table 2.B1 to BBR (3.09 N, 101.44 E). Location checked 21 Oct 2026 on JPS Selangor's own station layer (jpsselgis.selangor.gov.my, Hosted/Stesen_Hidrologi, 'Stesen Rain Fall'): Telemetri Telok Gong at 2.9951 N, 101.3679 E, about 13 km south-west of BBR, in Klang district, coastal like BBR; it matches the station-number grid (29 = 2.9 N, 13 = 101.3 E). Nearer JPS gauges (Bandar Klang, Pekan Meru) have no IDF constants in Table 2.B1. Neighbours 3314001 and 2815001 give a sensitivity range",
         "confidence": "M",
-        "note": "Station coordinates not checked against a JPS list [verify]"
+        "note": "Location H (JPS layer); that the telemetry station is the IDF gauge 2913001 is inferred from the name and grid (M)"
       }
     },
     "durations_h": {

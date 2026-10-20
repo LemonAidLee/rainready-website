@@ -1,6 +1,6 @@
 // The copies are committed, so the site builds without the simulator folder (e.g. on Vercel).
 // Copy the simulator's hand-off package into the site, so simulations/township-3d stays the one source of truth:
-//   exports/{township.glb, trees.json, inputs.json, outputs.json} -> public/data/
+//   exports/{township.glb, trees.json, inputs.json, outputs.json, overlays.json} -> public/data/
 //   data/zones.json -> public/data/zones_meta.json (ids, areas, routes only)
 //   screening.ts (the TypeScript port, held equal to screening.py)  -> src/sim/screening.ts
 //   three's Draco decoder                                           -> public/draco/
@@ -18,7 +18,7 @@ if (!existsSync(sim)) {
 }
 mkdirSync(join(site, "public", "data"), { recursive: true });
 mkdirSync(join(site, "src", "sim"), { recursive: true });
-for (const f of ["township.glb", "trees.json", "inputs.json", "outputs.json"]) cpSync(join(sim, "exports", f), join(site, "public", "data", f));
+for (const f of ["township.glb", "trees.json", "inputs.json", "outputs.json", "overlays.json"]) cpSync(join(sim, "exports", f), join(site, "public", "data", f));
 // zones.json carries every overlay triangle (4.5 MB); the site needs only ids, areas and routes
 const zones = JSON.parse(readFileSync(join(sim, "data", "zones.json"), "utf-8")).zones
   .map(({ id, name, area_ha, drains_to, council, route }) => ({ id, name, area_ha, drains_to, council, route }));

@@ -1,0 +1,110 @@
+// Scenario control: presets, then one slider per lever. Every lever names what it changes in the model ("Watch"),
+// and each change re-runs screening.ts in the browser. Values that are not the sourced ones are flagged.
+import { Building2, CloudRain, Eye, Gauge, RotateCcw, Waves } from "lucide-react";
+import type { ReactNode } from "react";
+import { ASSUMED_CAP, PRESETS, applyPreset, sourcedControls, type Controls } from "../lib/data";
+import { num } from "../lib/format";
+
+const ARIS = [2, 5, 10, 20, 50, 100];
+
+function Slider(p: { label: string; value: number; min: number; max: number; step: number; fmt: (v: number) => string;
+                     onChange: (v: number) => void; ticks?: [number, string][]; sourced?: number; spot?: string }) {
+  const changed = p.sourced !== undefined && Math.abs(p.value - p.sourced) > 1e-9;
+  const pct = ((p.value - p.min) / (p.max - p.min)) * 100;
+  return (
+    <div className="slider" data-spot={p.spot}>
+      <div className="slider-top"><span>{p.label}</span><b className={changed ? "changed" : ""}>{p.fmt(p.value)}</b></div>
+      <input type="range" min={p.min} max={p.max} step={p.step} value={p.value} style={{ ["--pct" as any]: `${pct}%` }}
+        onChange={(e) => p.onChange(+e.target.value)} aria-label={p.label} />
+      {p.ticks && <div className="ticks">{p.ticks.map(([v, t]) => (
+        <button key={t} style={{ left: `${((v - p.min) / (p.max - p.min)) * 100}%` }} onClick={() => p.onChange(v)}>{t}</button>
+      ))}</div>}
+    </div>
+  );
+}
+
+function Section(p: { n: string; icon: ReactNode; title: string; watch: string; children: ReactNode; spot?: string; conf?: string }) {
+  return (
+    <section className="ctl-sec" data-spot={p.spot}>
+      <div className="ctl-head"><span className="ctl-n">{p.n}</span>{p.icon}<b>{p.title}</b>{p.conf && <span className="conf">{p.conf}</span>}</div>
+      {p.children}
+      <div className="watch"><Eye size={12} /> {p.watch}</div>
+    </section>
+  );
+}
+
+export function ControlPanel(p: { inputs: any; c: Controls; set: (c: Controls) => void; preset: string | null;
+                                  setPreset: (id: string | null) => void; close: () => void }) {
+  const s = sourcedControls(p.inputs), c = p.c;
+  const set = (patch: Partial<Controls>) => { p.set({ ...c, ...patch }); p.setPreset(null); };
+  return (
+    <aside className="panel panel-left controls" data-spot="controls">
+      <div className="panel-head"><span>SCENARIO CONTROL</span><button className="x" onClick={p.close} aria-label="Close">×</button></div>
+
+      <div className="presets" data-spot="presets">
+        {PRESETS.map((pr) => (
+          <button key={pr.id} className={`preset ${p.preset === pr.id ? "on" : ""}`}
+            onClick={() => { p.set(applyPreset(p.inputs, pr)); p.setPreset(pr.id); }}>
+            <b>{pr.label}</b><small>{pr.blurb}</small>
+          </button>
+        ))}
+      </div>
+
+      <Section n="01" icon={<Building2 size={14} />} title="Upstream development" spot="dev" conf="what-if"
+        watch="Blocks rise on open land in Area A and fill the area beyond the edge; the shared drain's load moves.">
+        <Slider label="Area A built out" value={c.dev} min={0} max={1} step={0.05} sourced={0} spot="dev-slider"
+          fmt={(v) => (v === 0 ? "Today" : `${Math.round(v * 100)} %`)} onChange={(v) => set({ dev: v })}
+          ticks={[[0, "Today"], [0.5, "Half"], [1, "Built out"]]} />
+        <Slider label="Area A beyond the model edge" value={c.extArea} min={0} max={300} step={10} sourced={s.extArea}
+          fmt={(v) => `${v} ha`} onChange={(v) => set({ extArea: v })} />
+        <Slider label="Runoff C when built" value={c.extC} min={0.65} max={0.95} step={0.01} sourced={s.extC}
+          fmt={(v) => `${num(v, 2)}${Math.abs(v - 0.9) < 0.005 ? " · housing" : Math.abs(v - 0.95) < 0.005 ? " · commercial" : ""}`}
+          onChange={(v) => set({ extC: v })} />
+        <p className="ctl-note">Area beyond the edge: no public catchment boundary, so 50 ha is a stated test value (L).
+          C 0.90 = link and terrace housing, MSMA 2 Table 2.5, where peak control is not fully achieved.</p>
+      </Section>
+
+      <Section n="02" icon={<Waves size={14} />} title="What-if pond" spot="pond" conf="what-if"
+        watch="The pond appears in zone Z06 and grows with its size; pond A's storage need drops.">
+        <label className="toggle">
+          <input type="checkbox" checked={c.pond} onChange={(e) => set({ pond: e.target.checked })} />
+          <span className="sw" /><span>{c.pond ? "Pond added on OSM brownfield land (Z06)" : "No what-if pond"}</span>
+        </label>
+        <Slider label="Pond size" value={c.pondSize} min={5000} max={60000} step={1000} sourced={s.pondSize}
+          fmt={(v) => `${num(v, 0)} m³`} onChange={(v) => set({ pondSize: v, pond: true })} />
+      </Section>
+
+      <Section n="03" icon={<Gauge size={14} />} title="Shared trunk drain" spot="drain" conf="L"
+        watch="The drain ribbon widens; in the storm its colour shows the load (cyan, amber, red over capacity).">
+        <Slider label="Top width (concrete trapezoid)" value={c.drainTopWidth} min={3} max={14} step={0.5} sourced={s.drainTopWidth}
+          spot="drain-slider" fmt={(v) => `${num(v, 1)} m`} onChange={(v) => set({ drainTopWidth: v })}
+          ticks={[[3, "3"], [6, "6 assumed"], [10, "10 main ditch"], [14, "14"]]} />
+        <p className="ctl-note">The biggest unknown: no public record gives this drain's size. It decides whether the ponds can release during the storm.</p>
+      </Section>
+
+      <Section n="04" icon={<CloudRain size={14} />} title="Design storm" spot="storm-sec" conf="H"
+        watch="Rain density follows the intensity; every result is re-run at the new return period.">
+        <div className="seg">
+          {ARIS.map((a) => <button key={a} className={c.ari === a ? "on" : ""} onClick={() => set({ ari: a })}>{a} yr</button>)}
+        </div>
+        <p className="ctl-note">MSMA 2 IDF, gauge 2913001 Telok Gong. 100 yr is the major-system standard for housing (Table 1.1); 10 yr is the minor system.</p>
+      </Section>
+
+      <Section n="05" icon={<Waves size={14} />} title="Stated pond capacity" spot="cap" conf="planner input"
+        watch="Ponds fill to the share of capacity used; zones switch to capacity bands.">
+        <div className="caps">
+          {(["capA", "capB"] as const).map((k) => (
+            <label key={k}><span>Pond {k.slice(-1)}</span>
+              <input type="number" min={0} step={1000} placeholder="not public" value={c[k] ?? ""}
+                onChange={(e) => set({ [k]: e.target.value === "" ? null : +e.target.value } as Partial<Controls>)} /></label>
+          ))}
+        </div>
+        <button className="link" onClick={() => set({ capA: ASSUMED_CAP.pond_A, capB: ASSUMED_CAP.pond_B })}>
+          Use the assumed capacities (mapped area × 1.5 m, L)</button>
+      </Section>
+
+      <button className="reset" onClick={() => { p.set(sourcedControls(p.inputs)); p.setPreset("today"); }}>
+        <RotateCcw size={13} /> Reset to the sourced values</button>
+    </aside>
+  );
+}

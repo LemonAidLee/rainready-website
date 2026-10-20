@@ -2,7 +2,7 @@
 // no real people, no invented phone numbers or dates. The move-now card builds on official warnings and links to them.
 import { useState } from "react";
 import { ArrowLeft, MapPin } from "lucide-react";
-import { Wordmark } from "./Planner";
+import { Wordmark } from "./Shell";
 
 type Msg = { me?: boolean; text: string; small?: string };
 const STEPS: { msgs: Msg[]; replies: string[] }[] = [
@@ -22,7 +22,7 @@ function Chat() {
   const [step, setStep] = useState(0);
   const msgs = STEPS.slice(0, step + 1).flatMap((s) => s.msgs);
   return (
-    <div className="phone"><div className="screen">
+    <div className="phone" data-spot="phone-report"><div className="screen">
       <div className="bar"><span>Residents' association · RainReady</span><span className="example">EXAMPLE</span></div>
       <div className="msgs">{msgs.map((m, i) => <div key={i} className={`msg ${m.me ? "me" : ""}`}>{m.text}{m.small && <small>{m.small}</small>}</div>)}</div>
       <div className="replies">{STEPS[step].replies.map((r) => (
@@ -36,7 +36,7 @@ function MoveNow() {
   const [done, setDone] = useState<number[]>([]);
   const items = ["Move the car to the example higher-ground spot", "Lift valuables and documents off the floor", "Switch off the mains if water may enter", "Check on neighbours who may need help"];
   return (
-    <div className="phone"><div className="screen">
+    <div className="phone" data-spot="phone-move"><div className="screen">
       <div className="bar"><span>Move-now plan · Spot 2 street</span><span className="example">EXAMPLE</span></div>
       <div className="msgs">
         <div className="msg" style={{ maxWidth: "100%" }}>

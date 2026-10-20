@@ -9,7 +9,7 @@ export function Rain({ strength }: { strength: number }) {
   const { geo, mat } = useMemo(() => {
     const pos = new Float32Array(N * 6), seed = new Float32Array(N * 2), end = new Float32Array(N * 2);
     for (let i = 0; i < N; i++) {
-      const x = -1300 + Math.random() * 3080, z = -680 + Math.random() * 1580, s = Math.random();
+      const x = -1222 + Math.random() * 2922, z = -608 + Math.random() * 1438, s = Math.random();
       pos.set([x, 0, z, x, 0, z], i * 6); seed.set([s, s], i * 2); end.set([0, 1], i * 2);
     }
     const geo = new THREE.BufferGeometry();
@@ -24,13 +24,13 @@ export function Rain({ strength }: { strength: number }) {
         void main(){ vec3 p = position; float y = mod(seed * ${TOP}.0 - uTime * 90.0, ${TOP}.0);
           p.y = y + tip * ${LEN}.0; vTip = tip; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); }`,
       fragmentShader: `uniform float uOpacity; varying float vTip;
-        void main(){ gl_FragColor = vec4(0.62, 0.72, 0.84, uOpacity * (0.25 + 0.75 * vTip)); }`,
+        void main(){ gl_FragColor = vec4(0.70, 0.82, 0.95, uOpacity * (0.25 + 0.75 * vTip)); }`,
     });
     return { geo, mat };
   }, []);
   useFrame((state, dt) => {
     mat.uniforms.uTime.value = state.clock.elapsedTime;
-    mat.uniforms.uOpacity.value = THREE.MathUtils.lerp(mat.uniforms.uOpacity.value, strength * 0.55, Math.min(1, dt * 2));
+    mat.uniforms.uOpacity.value = THREE.MathUtils.lerp(mat.uniforms.uOpacity.value, strength * 0.3, Math.min(1, dt * 2));
   });
   return <lineSegments geometry={geo} material={mat} renderOrder={4} />;
 }

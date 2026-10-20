@@ -3,7 +3,7 @@
 import { ArrowLeft, Printer } from "lucide-react";
 import { SCENARIOS, zoneLook } from "../lib/data";
 import { change, drainsTo, m3, num } from "../lib/format";
-import { Wordmark } from "./Planner";
+import { Wordmark } from "./Shell";
 
 export function Brief({ inputs, results, adjusted }: { inputs: any; results: any; adjusted: boolean }) {
   const inp = inputs, S = results.scenarios, now = S.now;   // the inputs actually used (adjusted if the planner changed any)
@@ -39,7 +39,7 @@ export function Brief({ inputs, results, adjusted }: { inputs: any; results: any
 
       <h2>Storage required</h2>
       <div className="kpis">{pond("pond_A", "Pond A")}{pond("pond_B", "Pond B")}</div>
-      <div className="sheet" style={{ marginTop: 12 }}>
+      <div className="sheet" style={{ marginTop: 12 }} data-spot="brief-table">
         <table className="t">
           <thead><tr><th>Scenario</th><th>Pond A</th><th>Pond B</th><th>Trunk drain load</th><th>Gap vs stated capacity</th></tr></thead>
           <tbody>{SCENARIOS.map((s) => {
@@ -72,28 +72,28 @@ export function Brief({ inputs, results, adjusted }: { inputs: any; results: any
       </div>
 
       <h2>Responsibility record</h2>
-      <div className="sheet">
+      <div className="sheet" data-spot="brief-owners">
         <table className="t">
           <thead><tr><th>Asset</th><th>Mapped as</th><th>Who maintains it</th><th>Conf.</th></tr></thead>
           <tbody>
-            <tr><td>Pond A</td><td>OSM 399570465, "Flood Retention Pond"</td><td>[TBD]</td><td><span className="conf">L</span></td></tr>
-            <tr><td>Pond B</td><td>OSM 359496461, "Flood Retention Pond"</td><td>[TBD]</td><td><span className="conf">L</span></td></tr>
-            <tr><td>Shared trunk drain</td><td>OSM ditch chain at the council corner to the main ditch</td><td>[TBD]</td><td><span className="conf">L</span></td></tr>
-            <tr><td>Main ditch</td><td>OSM way 888406336</td><td>[TBD]</td><td><span className="conf">L</span></td></tr>
-            <tr><td>Council-line crossing drain</td><td>OSM drain at 3.09294 N, 101.44433 E</td><td>[TBD]</td><td><span className="conf">L</span></td></tr>
+            <tr><td>Pond A</td><td>OSM 399570465; JPS pond K02 (Persiaran Batu Belah, 12 acres)</td><td>JPS Selangor: on its phase-1 pond list (surveyed 2011)</td><td><span className="conf">M</span></td></tr>
+            <tr><td>Pond B</td><td>OSM 359496461; JPS pond K03 (Persiaran Batu Belah, 14 acres)</td><td>JPS Selangor: on its phase-1 pond list (surveyed 2011)</td><td><span className="conf">M</span></td></tr>
+            <tr><td>Shared trunk drain</td><td>OSM ditch chain from the council corner to the main ditch</td><td>Assumed MBDK (Selangor rule: drains to monsoon drains are the council's)</td><td><span className="conf">L</span></td></tr>
+            <tr><td>Main ditch</td><td>OSM way 888406336</td><td>Assumed JPS Selangor (Selangor rule: drains to rivers are JPS's)</td><td><span className="conf">L</span></td></tr>
+            <tr><td>Council-line crossing drain</td><td>OSM drain at 3.09294 N, 101.44433 E</td><td>Assumed MBSA above the line, MBDK below it</td><td><span className="conf">L</span></td></tr>
           </tbody>
         </table>
-        <p style={{ fontSize: 12.5, marginBottom: 0 }}>Owners are left blank until a source names them. The record exists so that each party can fill in its own line.</p>
+        <p style={{ fontSize: 12.5, marginBottom: 0 }}>Sources: JPS Selangor GIS, layer Kolam_Fasa_JPS (read 21 Oct 2026); the Selangor rule for unowned drains (Utusan, 4 Sep 2025). Lines marked L are assumptions until the party confirms its own line; the record exists so that each party can.</p>
       </div>
 
       <h2>Key assumptions</h2>
       <ul>
-        <li>Rainfall: MSMA 2 IDF constants for gauge {inp.storm.idf.station} (H); the gauge was chosen as the nearest listed in Table 2.B1 (M, coordinates to verify).</li>
+        <li>Rainfall: MSMA 2 IDF constants for gauge {inp.storm.idf.station} (H); the gauge (Telok Gong, 2.995 N 101.368 E on JPS's station layer, about 13 km south-west) is the nearest listed in Table 2.B1 (H).</li>
         <li>Runoff coefficients: MSMA 2 Table 2.5 (major system), area-weighted over the land cover of the <b>simulated</b> model town (M).</li>
         <li>Pond release capped at the pre-development peak flow, former oil palm C 0.40 (MSMA 1.2.1) and by room in the trunk drain (M).</li>
         <li>Trunk drain: concrete trapezoid, top {inp.trunk_drain.section.top_width_m.value} m, n 0.018 (Table 2.3), slope 0.0013: <b>size not measurable from public data (L) and the result depends on it most</b>.</li>
         <li>Upstream area beyond the model edge: {inp.external_inflows.EXT_A.area_ha.value} ha test value (L).</li>
-        <li>Stated pond capacities are not public, so they are not claimed. Enter them in the planner view to see the gap.</li>
+        <li>Stated pond capacities are not public, so none is claimed by default. The planner view offers an assumed capacity (mapped water area × 1.5 m, confidence L) and lets a planner enter a stated one.</li>
       </ul>
       <p style={{ fontSize: 12 }}>Sources: MSMA 2nd Edition (DID Malaysia, 2012), Chapters 1 and 2; OpenStreetMap contributors (ODbL); Copernicus DEM GLO-30. The town fabric is a simulated layout loosely based on Bandar Bukit Raja; Area A / Area B are a simulated pair based on Setia Alam (Shah Alam) and Bandar Bukit Raja (Klang).</p>
     </div>

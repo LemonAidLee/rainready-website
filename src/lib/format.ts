@@ -7,4 +7,4 @@ export const change = (r: number | null | undefined) => {
   return p === 0 ? "no change" : `${p > 0 ? "+" : "−"}${Math.abs(p)} %`;
 };
 export const drainsTo = (t: string) =>
-  ({ pond_A: "Pond A", pond_B: "Pond B", trunk_drain: "the shared trunk drain", TBD: "not known (outlet TBD)" } as Record<string, string>)[t] ?? t;
+  ({ pond_A: "Pond A", pond_B: "Pond B", trunk_drain: "the shared trunk drain", TBD: "not known (assumed to leave the model to the east)" } as Record<string, string>)[t] ?? t;
