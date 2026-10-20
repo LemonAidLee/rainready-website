@@ -182,7 +182,7 @@ input:focus-visible + .sw { outline: 2px solid var(--gold); outline-offset: 2px;
 .delta { font: 500 10.5px/1 var(--mono); color: var(--text-3); white-space: nowrap; }
 .delta.up { color: var(--amber); } .delta.down { color: var(--green); }
 .bar { position: relative; height: 4px; background: rgba(130, 170, 200, 0.14); border-radius: 2px; }
-.bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; transition: width 0.5s ease, background 0.4s; }
+.bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 2px; transform-origin: left center; transition: transform 0.5s ease, background 0.4s; }
 .bar em { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--text); opacity: 0.7; }
 .res-sub { margin-top: 6px; font-size: 11px; line-height: 1.4; color: var(--text-3); }
 .res-foot { padding: 9px 14px 11px; border-top: 1px solid var(--line); font-size: 10.5px; color: var(--text-3); line-height: 1.4; }
@@ -198,7 +198,7 @@ input:focus-visible + .sw { outline: 2px solid var(--gold); outline-offset: 2px;
 .card .big { padding: 2px 14px 0; font: 600 26px/1.1 var(--mono); }
 .band-tag { display: inline-flex; margin: 10px 14px 0; padding: 3px 9px; border-radius: 2px; font: 600 10.5px/1.4 var(--mono); letter-spacing: 0.06em;
   color: var(--b); border: 1px solid var(--b); background: color-mix(in srgb, var(--b) 14%, transparent); }
-.note { margin: 12px 14px 14px; padding: 8px 10px; border-left: 2px solid var(--line-2); background: rgba(130, 170, 200, 0.05);
+.note { margin: 12px 14px 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 3px; background: rgba(130, 170, 200, 0.05);
   font-size: 11.5px; line-height: 1.5; color: var(--text-2); }
 
 /* ---- view bar (bottom-left) ---- */

@@ -14,7 +14,7 @@ function Delta({ r }: { r: number | null | undefined }) {
 function Bar({ v, max, mark, color }: { v: number; max: number; mark?: number; color: string }) {
   return (
     <div className="bar">
-      <i style={{ width: `${Math.min(100, (v / max) * 100)}%`, background: color }} />
+      <i style={{ transform: `scaleX(${Math.min(1, v / max)})`, background: color }} />
       {mark !== undefined && <em style={{ left: `${Math.min(100, (mark / max) * 100)}%` }} />}
     </div>
   );
