@@ -239,7 +239,7 @@
 .wl .admin-update-form .button { align-self: flex-start; }
 .wl .admin-progress-picker { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding-top: 2px; }
 .wl .admin-progress-track { position: absolute; top: 12px; right: 12.5%; left: 12.5%; height: 3px; overflow: hidden; border-radius: 3px; background: var(--line-2); }
-.wl .admin-progress-track > span { display: block; height: 100%; border-radius: inherit; background: var(--wl-s2); transition: width .25s ease; }
+.wl .admin-progress-track > span { display: block; width: 100%; height: 100%; border-radius: inherit; background: var(--wl-s2); transform-origin: left center; transition: transform .25s ease; }
 .wl .admin-progress-step { position: relative; z-index: 1; display: flex; min-width: 0; align-items: center; flex-direction: column; gap: 5px; padding: 0 2px; border: 0; color: var(--text-3); background: transparent; font-size: 9px; line-height: 1.25; text-align: center; }
 .wl .admin-progress-marker { display: grid; width: 24px; height: 24px; place-items: center; border: 2px solid var(--line-2); border-radius: 50%; color: var(--text-2); background: var(--wl-surface); font: 700 9px var(--mono); transition: border-color .18s ease, background .18s ease, color .18s ease; }
 .wl .admin-progress-step.complete .admin-progress-marker, .wl .admin-progress-step.active .admin-progress-marker { border-color: var(--wl-s2); color: #04121a; background: var(--wl-s2); }

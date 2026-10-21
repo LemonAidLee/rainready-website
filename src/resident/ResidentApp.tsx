@@ -409,7 +409,7 @@ function AdminProgressPicker({ status, holderShort, onChange }: { status: Status
   const progress = currentStage < 0 ? 0 : (currentStage / (reportStatuses.length - 1)) * 100;
   return (
     <div className="admin-progress-picker" role="group" aria-label="Select report progress">
-      <div className="admin-progress-track" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
+      <div className="admin-progress-track" aria-hidden="true"><span style={{ transform: `scaleX(${progress / 100})` }} /></div>
       {reportStatuses.map((item) => (
         <button className={`admin-progress-step ${item === status ? "active" : ""} ${reportStatuses.indexOf(item) < currentStage ? "complete" : ""}`}
           type="button" key={item} aria-pressed={item === status} onClick={() => onChange(item)}>

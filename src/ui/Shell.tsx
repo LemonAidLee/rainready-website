@@ -61,8 +61,8 @@ export function Rail(p: { route: string; panel: Panel; setPanel: (x: Panel) => v
       <Item icon={<LayersIcon size={18} />} label="Layers" on={planner && p.panel === "layers"} spot="rail-layers"
         onClick={() => { if (!planner) location.hash = "#/planner"; p.setPanel(p.panel === "layers" ? null : "layers"); }} />
       <div className="rail-sep" />
-      <Item icon={<FileText size={18} />} label="Findings" href="#/brief" on={p.route === "brief"} spot="rail-brief" />
       <Item icon={<Users size={18} />} label="Residents" href="#/resident" on={p.route === "resident"} />
+      <Item icon={<FileText size={18} />} label="Findings" href="#/brief" on={p.route === "brief"} spot="rail-brief" />
       <Item icon={<LifeBuoy size={18} />} label="Recovery" href="#/after" on={p.route === "after"} spot="rail-after" />
       <div className="rail-grow" />
       <Item icon={<PlayCircle size={18} />} label="Demo" onClick={p.onDemo} />

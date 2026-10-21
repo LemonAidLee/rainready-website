@@ -622,7 +622,7 @@ table.t td.num { text-align: right; font-family: var(--mono); font-variant-numer
 .check.miss { border-color: rgba(242, 165, 22, 0.45); }
 .check.miss .check-i { background: rgba(242, 165, 22, 0.15); color: var(--r-med); }
 .assume { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 10px; }
-.assume-card { padding: 12px 14px; border-left: 3px solid var(--gold); background: var(--panel); border-radius: 0 6px 6px 0; }
+.assume-card { padding: 12px 14px; border: 1px solid rgba(227, 179, 65, 0.3); background: var(--panel); border-radius: 6px; }
 .assume-card b { color: var(--text); font-size: 13.5px; }
 .assume-card p { margin: 4px 0 6px; font-size: 12.5px; }
 
