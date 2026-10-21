@@ -9,7 +9,7 @@ import { useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
-import { BAND_COLOR, zoneLook, type Controls, type ScenarioId } from "../lib/data";
+import { BAND_COLOR, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
 import { m3 } from "../lib/format";
 import type { Anchors, Layers, V3 } from "./Township";
 
@@ -18,7 +18,8 @@ const gl = (x: number, h: number, y: number) => new THREE.Vector3(x, h, -y);
 const TRUNK_CHAIN = ["drain_D29", "drain_D28", "drain_D26", "drain_D27", "drain_D25", "drain_D24", "drain_D09", "drain_D21", "drain_D05"]; // east to west, as plan_zones.py
 const CROSSING = "drain_D32";
 export const EXT_ORIGIN: XY = [940, 660];                    // south-west corner of the "Area A beyond the edge" footprint (north of Z01)
-export const VISUAL_DRAIN_K = 2.5;                           // trunk drain ribbon is drawn 2.5x its width so it reads at overview zoom
+const AREA_B: XY = [440, -1150];                              // Area B label: south-west edge, clear of pond B's tag
+export const VISUAL_DRAIN_K = 2.5;                          // trunk drain ribbon is drawn 2.5x its width so it reads at overview zoom
 
 /** Ground height under (x, y) from the draped zone overlays (they cover the whole model rectangle). */
 function groundFn(zones: THREE.Mesh[]) {
@@ -118,12 +119,16 @@ function chain(drains: Record<string, XY[]>, ids: string[]): XY[] {
 
 // What residents said about each street (Sinar Harian, 25 May 2024): only Jalan Makyong is reported as flooding
 const SPOT_NOTE: Record<number, string> = { 1: "Residents report flooding", 2: "Residents ask for a retention pond", 3: "Residents ask for bigger drains" };
+// where each spot's stem meets its box, and extra stem length: the three spots are close on screen, so their boxes
+// lean apart (Spot 1 west, Spot 3 east and higher, clear of Spot 2)
+const SPOT_AX: Record<number, string> = { 1: "78%", 2: "50%", 3: "22%" };
+const SPOT_LIFT: Record<number, string> = { 1: "0px", 2: "0px", 3: "26px" };
 const loadColor = (r: number) => (r >= 1 ? BAND_COLOR.high : r >= 0.8 ? BAND_COLOR.medium : "#35d0e6");
 
 // ---------------------------------------------------------------------------------------------------------------
 
 export function Overlays(p: {
-  anchors: Anchors; council: XY[][]; results: any; scenario: ScenarioId; controls: Controls; storm: number;
+  anchors: Anchors; council: XY[][]; results: any; scenario: ScenarioId; basis: Basis; controls: Controls; storm: number;
   layers: Layers; pickZone: (id: string) => void;
 }) {
   const ground = useMemo(() => groundFn(p.anchors.zones), [p.anchors]);
@@ -131,7 +136,7 @@ export function Overlays(p: {
   // once the view is zoomed in, so labels never pile up
   const { camera, size } = useThree();
   const [detail, setDetail] = useState(false);
-  const baseZoom = size.width < 860 ? size.width / 3000 : Math.min((size.width - 760) / 2900, (size.height - 110) / 2050);
+  const baseZoom = size.width < 860 ? size.width / 3000 : Math.min((size.width - 760) / 3250, (size.height - 110) / 2050);   // as App's Camera fit
   const sc = p.results.scenarios[p.scenario];
 
   // ---- council boundary
@@ -220,7 +225,7 @@ export function Overlays(p: {
   const L = p.anchors.labels;
   const pos = (k: string, dy = 0): V3 | null => (L[k] ? [L[k][0], L[k][1] + dy, L[k][2]] : null);
   const extCentre: V3 = [ox + side / 2, baseH + 30, -(oy + side / 2)];
-  const bandOf = (id: string) => zoneLook(sc.zones[id], p.scenario).band;
+  const bandOf = (id: string) => zoneLook(sc.zones[id], p.scenario, sc, p.basis).band;
   const ponds = sc.ponds;
   const html = { zIndexRange: [4, 2] as [number, number], center: true };
 
@@ -244,16 +249,17 @@ export function Overlays(p: {
       {/* labels */}
       {p.layers.labels && <>
         {pos("label_area_A", 40) && <Html position={pos("label_area_A", 40)!} {...html}>
-          <div className="tag tag-area"><b>AREA A</b><span>Shah Alam side · upstream</span></div></Html>}
-        {/* the .glb's Area B tag sits on Spot 2; Area B is most of the model, so its label goes on open ground to the south */}
-        {<Html position={gl(520, ground(520, -700) + 40, -700).toArray()} {...html}>
+          <div className="tag tag-area lean-west"><b>AREA A</b><span>Shah Alam side · upstream</span></div></Html>}
+        {/* the .glb's Area B tag sits on Spot 2; Area B is most of the model, so its label goes at the model's
+            south-west edge, clear of the pond B tag */}
+        {<Html position={gl(AREA_B[0], ground(...AREA_B) + 40, AREA_B[1]).toArray()} {...html}>
           <div className="tag tag-area"><b>AREA B</b><span>Klang side · downstream</span></div></Html>}
         {p.layers.upstream && <Html position={extCentre} {...html}>
-          <div className="tag tag-ext"><b>AREA A · BEYOND MODEL EDGE</b>
+          <div className="tag tag-ext lean-west"><b>AREA A · BEYOND MODEL EDGE</b>
             <span>{Math.round(p.controls.extArea)} ha (assumed) · {Math.round(p.controls.dev * 100)} % built out</span></div></Html>}
         {[1, 2, 3].map((i) => pos(`label_spot_${i}`, 20) && (
           <Html key={i} position={pos(`label_spot_${i}`, 20)!} {...html}>
-            <div className={`tag tag-spot ${i === 1 ? "" : "req"}`}><i />
+            <div className={`tag tag-spot ${i === 1 ? "" : "req"}`} style={{ ["--ax" as any]: SPOT_AX[i], ["--lift" as any]: SPOT_LIFT[i] }}><i />
               <b>SPOT {i}</b><span>{SPOT_NOTE[i]}</span></div></Html>
         ))}
         {(detail || p.storm > 0.5) && Object.keys(sc.zones).map((id) => pos(`label_zone_${id}`) && (

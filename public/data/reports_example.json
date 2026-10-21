@@ -1,0 +1,10 @@
+{
+  "_what": "EXAMPLE resident reports in the shared report format (documentation/RESIDENT_PLANNER_INTEGRATION.md section 3). Not real reports: placed on the three mapped flood streets to show how the resident door feeds the map. Replace with the resident door's own file or feed.",
+  "reports": [
+    { "id": "ex-01", "created_at": null, "lat": 3.08885, "lon": 101.42780, "accuracy_m": 15, "type": "flooded_street", "status": "verified", "verified_by": "residents_association", "forwarded_to": null, "note": "Example: water across the road (Spot 1 street)", "example": true },
+    { "id": "ex-02", "created_at": null, "lat": 3.08910, "lon": 101.42735, "accuracy_m": 15, "type": "blocked_drain", "status": "forwarded", "verified_by": "residents_association", "forwarded_to": { "channel": "iClean Selangor", "url": null }, "note": "Example: drain grating blocked", "example": true },
+    { "id": "ex-03", "created_at": null, "lat": 3.08903, "lon": 101.43325, "accuracy_m": 15, "type": "blocked_drain", "status": "new", "verified_by": null, "forwarded_to": null, "note": "Example: roadside drain full of silt (Spot 3 street)", "example": true },
+    { "id": "ex-04", "created_at": null, "lat": 3.08954, "lon": 101.43984, "accuracy_m": 15, "type": "flooded_street", "status": "verified", "verified_by": "residents_association", "forwarded_to": null, "note": "Example: ponding near the junction (Spot 2 street)", "example": true },
+    { "id": "ex-05", "created_at": null, "lat": 3.09640, "lon": 101.44600, "accuracy_m": 15, "type": "flooded_street", "status": "new", "verified_by": null, "forwarded_to": null, "note": "Example: upstream report, Shah Alam side", "example": true }
+  ]
+}

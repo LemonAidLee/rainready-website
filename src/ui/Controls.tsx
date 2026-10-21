@@ -1,8 +1,9 @@
 // Scenario control: presets, then one slider per lever. Every lever names what it changes in the model ("Watch"),
 // and each change re-runs screening.ts in the browser. Values that are not the sourced ones are flagged.
 import { Building2, CloudRain, Eye, Gauge, RotateCcw, Waves } from "lucide-react";
-import type { ReactNode } from "react";
-import { ASSUMED_CAP, PRESETS, applyPreset, sourcedControls, type Controls } from "../lib/data";
+import { Fragment, useMemo, type ReactNode } from "react";
+import { ASSUMED_CAP, PRESET_GROUPS, PRESETS, applyPreset, presetSummary, sourcedControls, type Basis, type Controls,
+         type Loaded } from "../lib/data";
 import { num } from "../lib/format";
 
 const ARIS = [2, 5, 10, 20, 50, 100];
@@ -33,20 +34,25 @@ function Section(p: { n: string; icon: ReactNode; title: string; watch: string; 
   );
 }
 
-export function ControlPanel(p: { inputs: any; c: Controls; set: (c: Controls) => void; preset: string | null;
-                                  setPreset: (id: string | null) => void; close: () => void }) {
+export function ControlPanel(p: { data: Loaded; inputs: any; c: Controls; set: (c: Controls) => void; preset: string | null;
+                                  setPreset: (id: string | null) => void; setBasis: (b: Basis) => void; close: () => void }) {
   const s = sourcedControls(p.inputs), c = p.c;
+  const summaries = useMemo(() => Object.fromEntries(PRESETS.map((pr) => [pr.id, presetSummary(p.data, pr)])), [p.data]);
   const set = (patch: Partial<Controls>) => { p.set({ ...c, ...patch }); p.setPreset(null); };
   return (
     <aside className="panel panel-left controls" data-spot="controls">
       <div className="panel-head"><span>SCENARIO CONTROL</span><button className="x" onClick={p.close} aria-label="Close">×</button></div>
 
       <div className="presets" data-spot="presets">
-        {PRESETS.map((pr) => (
-          <button key={pr.id} className={`preset ${p.preset === pr.id ? "on" : ""}`}
-            onClick={() => { p.set(applyPreset(p.inputs, pr)); p.setPreset(pr.id); }}>
-            <b>{pr.label}</b><small>{pr.blurb}</small>
-          </button>
+        {PRESETS.map((pr, i) => (
+          <Fragment key={pr.id}>
+            {pr.group !== PRESETS[i - 1]?.group && <div className={`preset-group g-${pr.group}`}>{PRESET_GROUPS[pr.group]}</div>}
+            <button className={`preset g-${pr.group} ${pr.wide ? "wide" : ""} ${p.preset === pr.id ? "on" : ""}`}
+              onClick={() => { p.set(applyPreset(p.inputs, pr)); p.setPreset(pr.id); p.setBasis(pr.basis); }}>
+              <b>{pr.label}</b><small>{pr.blurb}</small>
+              <em title={pr.basis === "capacity" ? "Share of capacity (assumed for ponds, L)" : "Change from today"}>{summaries[pr.id]}</em>
+            </button>
+          </Fragment>
         ))}
       </div>
 
@@ -103,7 +109,7 @@ export function ControlPanel(p: { inputs: any; c: Controls; set: (c: Controls) =
           Use the assumed capacities (mapped area × 1.5 m, L)</button>
       </Section>
 
-      <button className="reset" onClick={() => { p.set(sourcedControls(p.inputs)); p.setPreset("today"); }}>
+      <button className="reset" onClick={() => { p.set(sourcedControls(p.inputs)); p.setPreset("today"); p.setBasis("capacity"); }}>
         <RotateCcw size={13} /> Reset to the sourced values</button>
     </aside>
   );

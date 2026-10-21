@@ -1,7 +1,7 @@
 // Planner view panels: the live results panel, the zone / pond inspector card, the band legend and the About drawer.
 import { Droplet, X } from "lucide-react";
 import type { ReactNode } from "react";
-import { BAND_COLOR, zoneLook, type Controls, type ScenarioId } from "../lib/data";
+import { ASSUMED_CAP, BAND_COLOR, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
 import { change, drainsTo, m3, num } from "../lib/format";
 import type { Pick } from "../scene/Township";
 
@@ -20,21 +20,26 @@ function Bar({ v, max, mark, color }: { v: number; max: number; mark?: number; c
   );
 }
 
-export function Results(p: { res: any; base: any; scenario: ScenarioId; name: string; c: Controls; storm: number }) {
+export function Results(p: { res: any; base: any; scenario: ScenarioId; name: string; c: Controls; storm: number; basis: Basis }) {
   const sc = p.res.scenarios[p.scenario], now = p.res.scenarios.now;
-  const top = Math.max(...["pond_A", "pond_B"].flatMap((id) => [sc.ponds[id].storage_required_m3, now.ponds[id].storage_required_m3, sc.ponds[id].capacity_m3 ?? 0]));
+  // the capacity a pond is measured against: the entered one, else (when colouring against capacity) the assumed one
+  const capOf = (id: string) => sc.ponds[id].capacity_m3 ?? (p.basis === "capacity" ? ASSUMED_CAP[id] : null);
+  const top = Math.max(...["pond_A", "pond_B"].flatMap((id) => [sc.ponds[id].storage_required_m3, now.ponds[id].storage_required_m3, capOf(id) ?? 0]));
+  const noRoom = sc.trunk_drain.pond_release_share === 0;
   const pond = (id: "pond_A" | "pond_B") => {
-    const q = sc.ponds[id];
-    const over = q.capacity_m3 && q.storage_required_m3 > q.capacity_m3;
+    const q = sc.ponds[id], cap = capOf(id), gap = cap ? q.storage_required_m3 - cap : 0;
+    const over = cap && q.storage_required_m3 > cap;
     return (
       <div className="res-row" data-spot={`res-${id}`}>
         <div className="res-k">POND {id.slice(-1)} · STORAGE REQUIRED</div>
         <div className="res-v"><b>{m3(q.storage_required_m3)}</b><Delta r={q.change_vs_now} /></div>
-        <Bar v={q.storage_required_m3} max={top * 1.08} mark={q.capacity_m3 ?? now.ponds[id].storage_required_m3}
+        <Bar v={q.storage_required_m3} max={top * 1.08} mark={cap ?? now.ponds[id].storage_required_m3}
           color={over ? BAND_COLOR.high : "#3aa0ff"} />
-        <div className="res-sub">{q.capacity_m3
-          ? <>{over ? "Over" : "Within"} the entered capacity {m3(q.capacity_m3)} · {q.gap_m3 > 0 ? "short" : "spare"} {m3(Math.abs(q.gap_m3))}</>
-          : <>Marker = today · releases {q.released_m3 < 1 ? "nothing" : m3(q.released_m3)} during the storm</>}</div>
+        <div className="res-sub">{cap
+          ? <>{over ? "Over" : "Within"} the {q.capacity_m3 ? "entered" : "assumed (L)"} capacity {m3(cap)} · {gap > 0 ? "short" : "spare"} {m3(Math.abs(gap))}{noRoom && q.released_m3 < 1 && " · releases nothing: the shared drain has no room"}</>
+          : q.released_m3 < 1 && noRoom
+            ? <>Marker = today · releases nothing: the shared drain has no room, so upstream change can't move this</>
+            : <>Marker = today · releases {q.released_m3 < 1 ? "nothing" : m3(q.released_m3)} during the storm</>}</div>
       </div>
     );
   };
@@ -65,26 +70,30 @@ export function Results(p: { res: any; base: any; scenario: ScenarioId; name: st
   );
 }
 
-export function Legend({ results, scenario, storm }: { results: any; scenario: ScenarioId; storm: number }) {
+export function Legend({ results, scenario, storm, basis }: { results: any; scenario: ScenarioId; storm: number; basis: Basis }) {
   if (storm < 0.5) return <span className="lg-note">Mapped: ponds, drains, council line · simulated: town fabric</span>;
-  const basis = Object.values<any>(results.scenarios[scenario].zones).some((z) => z.band_basis === "capacity") ? "capacity" : "change";
-  if (scenario === "now" && basis === "change")
+  const vs = basis === "capacity" || Object.values<any>(results.scenarios[scenario].zones).some((z) => z.band_basis === "capacity") ? "capacity" : "change";
+  if (scenario === "now" && vs === "change")
     return <span className="lg-note">Today is the baseline · move a lever to see what changes</span>;
-  const items = basis === "capacity"
-    ? [["low", "< 80 % of capacity"], ["medium", "80–100 %"], ["high", "over capacity"], ["unknown", "outlet unknown"]]
-    : [["low", "no real increase"], ["medium", "+5–20 %"], ["high", "> +20 %"], ["unknown", "outlet unknown"]];
-  return <>{items.map(([b, t]) => <span key={b} className="lg"><i style={{ background: BAND_COLOR[b] }} />{t}</span>)}</>;
+  const assumed = basis === "capacity" && ["pond_A", "pond_B"].some((id) => results.scenarios[scenario].ponds[id].capacity_m3 === null);
+  const items = vs === "capacity"
+    ? [["low", "room to spare", "under 80 % full"], ["medium", "nearly full", "80–100 % full"], ["high", "not enough room", "over 100 %: more water than room"], ["unknown", "outlet unknown", ""]]
+    : [["better", "better", "more than 5 % less than today"], ["same", "about the same", "within 5 % of today"], ["worse", "worse", "up 5–20 % on today"], ["muchworse", "much worse", "up more than 20 % on today"], ["unknown", "outlet unknown", ""]];
+  return <>
+    {vs === "capacity" && assumed && <span className="lg-note" title="No pond capacity is public: mapped water area × 1.5 m, confidence L. Not flood depths.">On assumed capacities (L):</span>}
+    {items.map(([b, t, tip]) => <span key={b} className="lg" title={tip}><i style={{ background: BAND_COLOR[b] }} />{t}</span>)}
+  </>;
 }
 
 function Row({ k, children }: { k: string; children: ReactNode }) {
   return <><dt>{k}</dt><dd>{children}</dd></>;
 }
 
-export function Card(p: { pick: Pick; results: any; inputs: any; routes: Record<string, string>; scenario: ScenarioId; close: () => void }) {
+export function Card(p: { pick: Pick; results: any; inputs: any; routes: Record<string, string>; scenario: ScenarioId; basis: Basis; close: () => void }) {
   if (!p.pick) return null;
   const sc = p.results.scenarios[p.scenario];
   if (p.pick.kind === "zone") {
-    const z = sc.zones[p.pick.id], zi = p.inputs.zones[p.pick.id], look = zoneLook(z, p.scenario);
+    const z = sc.zones[p.pick.id], zi = p.inputs.zones[p.pick.id], look = zoneLook(z, p.scenario, sc, p.basis);
     const pond = sc.ponds[z.drains_to];
     return (
       <aside className="panel card" data-spot="card">
@@ -150,7 +159,7 @@ export function About(p: { inputs: any; results: any; close: () => void }) {
           <li>Peak flow per zone by the Rational Method, Q = C·i·A/360 (Eq. 2.3); C from Table 2.5, area-weighted over each zone's land cover. All zones are under the method's 80 ha limit.</li>
           <li>Runoff volume = Q × duration (Rational Hydrograph Method, 2.3.2).</li>
           <li>Ponds may release at most the pre-development peak flow (MSMA 1.2.1, Qpost ≤ Qpre; former oil palm, C 0.40), and only what the shared trunk drain still has room for (Manning, assumed section).</li>
-          <li>Storage required = inflow − release. Stated pond capacities are not public, so they are a planner input; without one, zones show the <b>change versus today</b>.</li>
+          <li>Storage required = inflow − release. Stated pond capacities are not public, so they are a planner input. Until one is entered, the map's <b>Storage shortfall</b> colours measure each zone against an assumed capacity (mapped water area × 1.5 m of live storage, confidence L) or, for zones on the trunk drain, against its assumed conveyance: red is "not enough room" for the water in the design storm, not a flood depth. <b>Change from today</b> colours a scenario by whether it is better or worse than today's land cover.</li>
         </ol>
         <h3>Independent cross-check</h3>
         <p>A teammate ran FastFlood (Fast Hazard B.V., v1.0.20; Copernicus GLO-30 at 20 m, ESA WorldCover, GPM IMERG design rain) over the same area for a 100-year storm. It shows water collecting in ponds A and B and along the east–west drain corridors, as our zones assume, and an effective runoff coefficient of 0.78–0.79 against our 0.63–0.78. We do not show its depth map: terrain error here is about 1 m. See research/FASTFLOOD_CROSSCHECK.md.</p>

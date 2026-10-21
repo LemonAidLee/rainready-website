@@ -7,7 +7,7 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { BAND_COLOR, zoneLook, type Controls, type ScenarioId } from "../lib/data";
+import { BAND_COLOR, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
 
 const DYNAMIC = /^(zone_Z\d\d|pond_[AB]|pond_[AB]_water|pond_whatif|pond_whatif_water|rr_upstream_change|rr_flow_arrows|rr_flow_arrows_cross|tree_proto|council_line|label_.*)$/;
 const DRY = 0.1;            // pond gauge on a clear day (display only)
@@ -62,6 +62,41 @@ function addWindows(mat: THREE.MeshStandardMaterial) {
         }`);
   };
   mat.customProgramCacheKey = () => "rr-windows";
+}
+
+/**
+ * The opening reveal: the township materialises from its centre outwards behind a cyan scan edge, and buildings and
+ * trees rise out of the ground. One shared radius for every material (REVEAL.uR, metres); 1e6 = fully shown.
+ * Look only: nothing here touches the results.
+ */
+export const REVEAL = { uR: { value: 1e6 }, uRC: { value: new THREE.Vector2(239, 105) } };   // centre: model middle (glTF x, z)
+export const REVEAL_MS = 1800, REVEAL_MAX = 1900;
+function addReveal(mat: THREE.Material, rise: number) {
+  if ((mat as any).__reveal || (mat as THREE.ShaderMaterial).isShaderMaterial) return;
+  (mat as any).__reveal = true;
+  const prev = mat.onBeforeCompile.bind(mat), prevKey = mat.customProgramCacheKey.bind(mat);
+  mat.onBeforeCompile = (sh, r) => {
+    prev(sh, r);
+    sh.uniforms.uR = REVEAL.uR; sh.uniforms.uRC = REVEAL.uRC;
+    sh.vertexShader = sh.vertexShader
+      .replace("#include <common>", "#include <common>\nuniform float uR; uniform vec2 uRC; varying float vRD;")
+      .replace("#include <begin_vertex>", `#include <begin_vertex>
+        vec4 rw = modelMatrix * vec4(transformed, 1.0);
+        #ifdef USE_INSTANCING
+          rw = modelMatrix * instanceMatrix * vec4(transformed, 1.0);
+        #endif
+        vRD = length(rw.xz - uRC);
+        float rk = clamp((uR - vRD) / 260.0, 0.0, 1.0);
+        transformed.y -= (1.0 - rk * rk * (3.0 - 2.0 * rk)) * ${rise.toFixed(1)};`);
+    sh.fragmentShader = sh.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform float uR; varying float vRD;")
+      .replace("#include <dithering_fragment>", `#include <dithering_fragment>
+        if (vRD > uR) discard;
+        float edge = 1.0 - smoothstep(0.0, 26.0, uR - vRD);
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.32, 0.86, 0.95), edge * 0.85);`);
+  };
+  mat.customProgramCacheKey = () => prevKey() + `|reveal${rise}`;
+  mat.needsUpdate = true;
 }
 
 interface Prepared {
@@ -170,6 +205,14 @@ function prepare(root: THREE.Object3D, trees: [number, number, number, number, s
       root.add(inst); out.trees.push(inst);
     }
   }
+  root.traverse((o) => {
+    const m = o as THREE.Mesh;
+    if (!m.isMesh) return;
+    for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+      const rise = (m as THREE.InstancedMesh).isInstancedMesh || /^web_(wall|roof)_/.test(mat.name) ? 40 : 0;
+      addReveal(mat, rise);
+    }
+  });
   root.userData.__prepared = out;
   return out;
 }
@@ -179,8 +222,9 @@ const lerp = THREE.MathUtils.lerp;
 export interface Layers { zones: boolean; labels: boolean; flow: boolean; boundary: boolean; trees: boolean; upstream: boolean }
 
 export function Township(props: {
-  results: any; scenario: ScenarioId; storm: number; controls: Controls; trees: [number, number, number, number, string][];
+  results: any; scenario: ScenarioId; basis: Basis; storm: number; controls: Controls; trees: [number, number, number, number, string][];
   pick: Pick; layers: Layers; onPick: (p: Pick) => void; onReady: (a: Anchors) => void; onHover?: (h: { zone: string | null; p: V3 } | null) => void;
+  onShown?: () => void;                     // the model has rendered (shaders compiled): lift the curtain
 }) {
   const { scene } = useGLTF("./data/township.glb", "./draco/");
   const prep = useMemo(() => prepare(scene, props.trees), [scene, props.trees]);
@@ -193,7 +237,7 @@ export function Township(props: {
   useEffect(() => {
     const t = target.current;
     for (const [id, z] of Object.entries<any>(sc.zones)) {
-      const look = zoneLook(z, props.scenario);
+      const look = zoneLook(z, props.scenario, sc, props.basis);
       const on = props.storm > 0.5;
       const sel = props.pick?.kind === "zone" && props.pick.id === id;
       t.zones[id] = { c: new THREE.Color(on ? BAND_COLOR[look.band] : BAND_COLOR.base),
@@ -207,12 +251,23 @@ export function Township(props: {
     // the what-if pond's footprint follows its size (area ~ volume at a fixed depth): 25,000 m3 is the modelled pond
     t.pondK = Math.sqrt(Math.max(0.05, props.controls.pondSize / 25000));
     t.flow = props.layers.flow ? props.storm : 0;
-  }, [sc, props.scenario, props.storm, props.pick, props.controls, props.layers]);
+  }, [sc, props.scenario, props.basis, props.storm, props.pick, props.controls, props.layers]);
 
   useEffect(() => { for (const t of prep.trees) t.visible = props.layers.trees; }, [props.layers.trees, prep]);
 
+  // the reveal: hidden for the first frames (they compile every shader, behind App's curtain), then grow outwards
+  const reveal = useRef<{ frames: number; t0: number }>({ frames: 0, t0: 0 });
+  useEffect(() => { REVEAL.uR.value = 0; reveal.current = { frames: 0, t0: 0 }; return () => { REVEAL.uR.value = 1e6; }; }, [prep]);
+
   const pondScale = useRef(0);
   useFrame((state, dt) => {
+    const rv = reveal.current;
+    if (!rv.t0) {
+      if (++rv.frames === 4) { rv.t0 = performance.now(); props.onShown?.(); }
+    } else if (REVEAL.uR.value < 1e6) {
+      const u = Math.min(1, (performance.now() - rv.t0) / REVEAL_MS);
+      REVEAL.uR.value = u >= 1 ? 1e6 : REVEAL_MAX * (1 - Math.pow(1 - u, 3));
+    }
     const t = target.current, k = Math.min(1, dt * 2.5);
     for (const [id, z] of Object.entries(prep.zones)) {
       const g = t.zones[id];
@@ -234,7 +289,8 @@ export function Township(props: {
     }
     for (const m of prep.flow) {
       m.uniforms.uTime.value = state.clock.elapsedTime * 0.8;
-      m.uniforms.uOpacity.value = lerp(m.uniforms.uOpacity.value, t.flow > 0.01 ? 0.15 + 0.8 * t.flow : 0, k);
+      const on = t.flow > 0.01 && REVEAL.uR.value >= 1e6;   // the arrows join once the reveal is complete
+      m.uniforms.uOpacity.value = lerp(m.uniforms.uOpacity.value, on ? 0.15 + 0.8 * t.flow : 0, k);
     }
     if (prep.edges) {   // outlines fade in once a building is more than a few pixels wide
       const z = (camera as THREE.OrthographicCamera).zoom;

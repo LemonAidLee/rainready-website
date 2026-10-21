@@ -61,7 +61,7 @@ export function Resident() {
     <div className="page">
       <header>
         <Wordmark />
-        <a className="text-btn" href="#/"><ArrowLeft size={16} /> Planner view</a>
+        <a className="text-btn" href="#/planner"><ArrowLeft size={16} /> Planner view</a>
       </header>
       <span className="pill">Clickable mock-up · example data</span>
       <h1>The resident door</h1>

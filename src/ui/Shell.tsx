@@ -1,5 +1,5 @@
 // The console frame around the 3D view: status bar (top), icon rail (left), evidence ticker and cursor readout (bottom).
-import { FileText, Info, Layers as LayersIcon, Map, PlayCircle, SlidersHorizontal, Users } from "lucide-react";
+import { FileText, Globe2, Info, Layers as LayersIcon, Map, PlayCircle, SlidersHorizontal, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import type { Layers } from "../scene/Township";
 import { num } from "../lib/format";
@@ -51,14 +51,15 @@ export function Rail(p: { route: string; panel: Panel; setPanel: (x: Panel) => v
   const Item = (q: { icon: ReactNode; label: string; on?: boolean; onClick?: () => void; href?: string; spot?: string }) =>
     q.href ? <a className={`rail-btn ${q.on ? "on" : ""}`} href={q.href} title={q.label} data-spot={q.spot}>{q.icon}<span>{q.label}</span></a>
            : <button className={`rail-btn ${q.on ? "on" : ""}`} onClick={q.onClick} title={q.label} data-spot={q.spot}>{q.icon}<span>{q.label}</span></button>;
-  const planner = p.route === "" || p.route === "demo";
+  const planner = p.route === "planner" || p.route === "demo";
   return (
     <nav className="rail" aria-label="Views">
-      <Item icon={<Map size={18} />} label="Planner" href="#/" on={planner && p.panel === null} />
+      <Item icon={<Globe2 size={18} />} label="Malaysia" href="#/" on={p.route === ""} />
+      <Item icon={<Map size={18} />} label="Planner" href="#/planner" on={planner && p.panel === null} />
       <Item icon={<SlidersHorizontal size={18} />} label="Scenario" on={planner && p.panel === "controls"}
-        onClick={() => { if (!planner) location.hash = "#/"; p.setPanel(p.panel === "controls" ? null : "controls"); }} />
+        onClick={() => { if (!planner) location.hash = "#/planner"; p.setPanel(p.panel === "controls" ? null : "controls"); }} />
       <Item icon={<LayersIcon size={18} />} label="Layers" on={planner && p.panel === "layers"}
-        onClick={() => { if (!planner) location.hash = "#/"; p.setPanel(p.panel === "layers" ? null : "layers"); }} />
+        onClick={() => { if (!planner) location.hash = "#/planner"; p.setPanel(p.panel === "layers" ? null : "layers"); }} />
       <div className="rail-sep" />
       <Item icon={<FileText size={18} />} label="Brief" href="#/brief" on={p.route === "brief"} spot="rail-brief" />
       <Item icon={<Users size={18} />} label="Residents" href="#/resident" on={p.route === "resident"} />

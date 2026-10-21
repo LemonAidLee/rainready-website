@@ -4,7 +4,7 @@ import { OrbitControls, OrthographicCamera } from "@react-three/drei";
 import * as THREE from "three";
 import { CloudRain, Crosshair, Sun } from "lucide-react";
 import { adjustedInputs, changedInputs, loadAll, results as computeResults, scenarioName, scenarioOf, sourcedControls,
-         type Controls, type Loaded } from "./lib/data";
+         type Basis, type Controls, type Loaded } from "./lib/data";
 import { Township, type Anchors, type Layers, type Pick, type V3 } from "./scene/Township";
 import { EXT_ORIGIN, Overlays, Pointers, type PointAt } from "./scene/Overlays";
 import { Rain } from "./scene/Rain";
@@ -13,6 +13,7 @@ import { About, Card, Legend, Results } from "./ui/Planner";
 import { ControlPanel } from "./ui/Controls";
 import { Footer, LayersPanel, Rail, StatusBar, Ticker, type Panel } from "./ui/Shell";
 import { Brief } from "./ui/Brief";
+import { Landing } from "./ui/Landing";
 import { Resident } from "./ui/Resident";
 import { DemoBar, Spotlight, STEPS, type Focus } from "./ui/Demo";
 
@@ -26,7 +27,8 @@ function Camera({ focus, view, nonce, inset }: { focus: Focus | null; view: View
   const controls = useRef<any>(null);
   // fit the model in the space left free by the side panels, and centre the view there
   const free = size.width - inset[0] - inset[1];
-  const zoom = size.width < 860 ? size.width / 3000 : Math.min(free / 2900, (size.height - 110) / 2050);
+  // 3250: the model plus its east-edge extras (Area A beyond the edge, its tags) clear both panels
+  const zoom = size.width < 860 ? size.width / 3000 : Math.min(free / 3250, (size.height - 110) / 2050);
   useEffect(() => {
     const cam = camera as THREE.OrthographicCamera;
     if (size.width < 860) cam.setViewOffset(size.width, size.height, 0, -Math.min(170, size.height * 0.2), size.width, size.height);
@@ -104,6 +106,7 @@ export default function App() {
   const [controls, setControls] = useState<Controls | null>(null);
   const [preset, setPreset] = useState<string | null>("today");
   const [storm, setStorm] = useState(0);
+  const [basis, setBasis] = useState<Basis>("capacity");     // what the zone colours measure (data.ts)
   const [pick, setPick] = useState<Pick>(null);
   const [panel, setPanel] = useState<Panel>(innerWidth > 900 ? "controls" : null);
   const [layers, setLayers] = useState<Layers>(LAYERS);
@@ -119,16 +122,37 @@ export default function App() {
   const route = useRoute();
   useEffect(() => { loadAll().then((d) => { setData(d); setControls(sourcedControls(d.inputs)); }).catch((e) => setError(String(e))); }, []);
   const ready = anchors !== null;
-  useEffect(() => {          // first visit: run the storm once the model is in; #/demo starts the guided demo
-    if (!ready || demo !== null) return;
-    if (route === "demo") { setDemo(0); setPlaying(location.hash.includes("play")); setClean(location.hash.includes("clean")); return; }
-    const t = setTimeout(() => setStorm(1), 1200);
+  // the planner opens behind a curtain while the first frames compile every shader (Township onShown), then the
+  // township grows outwards (REVEAL in Township); labels, the camera glide and the storm follow in that order
+  const [shown, setShown] = useState(false);
+  const [labelsOn, setLabelsOn] = useState(false);
+  useEffect(() => { if (route === "" || route === "brief" || route === "resident") { setShown(false); setLabelsOn(false); } }, [route]);
+  useEffect(() => {
+    if (!shown) return;
+    const t = setTimeout(() => setLabelsOn(true), 1000);
     return () => clearTimeout(t);
+  }, [shown]);
+  useEffect(() => {          // #/demo starts the guided demo once the model is in
+    if (ready && demo === null && route === "demo") { setDemo(0); setPlaying(location.hash.includes("play")); setClean(location.hash.includes("clean")); }
   }, [ready]);
+  useEffect(() => {          // after the reveal, the storm starts (outside the demo, which sets its own)
+    if (!shown || demo !== null) return;
+    const t = setTimeout(() => setStorm(1), 2000);
+    return () => clearTimeout(t);
+  }, [shown]);
   useEffect(() => {          // #/demo opened while the page is already loaded
     if (ready && demo === null && route === "demo") { setDemo(0); setPlaying(location.hash.includes("play")); setClean(location.hash.includes("clean")); }
   }, [route]);
   const res = useMemo(() => (data && controls ? computeResults(data, controls) : null), [data, controls]);
+  useEffect(() => {          // the landing map: forget the last model's anchors; arriving from it, start top-down
+    if (route === "") { setAnchors(null); return; }
+    if (route === "planner" && location.hash.includes("from=map")) setView("top");
+  }, [route]);
+  useEffect(() => {          // ... then, as the reveal finishes, glide into the 3D view
+    if (!shown || route !== "planner" || !location.hash.includes("from=map")) return;
+    const t = setTimeout(() => { setView("iso"); history.replaceState(null, "", "#/planner"); }, 1500);
+    return () => clearTimeout(t);
+  }, [shown, route]);
 
   // a change to a lever briefly points at the part of the model it moves
   const prev = useRef<Controls | null>(null);
@@ -150,16 +174,16 @@ export default function App() {
   // ---- guided demo: each step sets the app's state
   const go = useCallback((i: number) => setDemo(Math.max(0, Math.min(STEPS.length - 1, i))), []);
   const exit = useCallback(() => {
-    setDemo(null); setPlaying(false); setClean(false); setPick(null);
+    setDemo(null); setPlaying(false); setClean(false); setPick(null); setBasis("capacity");
     if (data) setControls(sourcedControls(data.inputs));
     setPreset("today"); setNonce((n) => n + 1); setPanel(innerWidth > 900 ? "controls" : null);
-    location.hash = "#/";
+    location.hash = "#/planner";
   }, [data]);
   useEffect(() => {
     if (demo === null || !data) return;
     const s = STEPS[demo];
     setControls({ ...sourcedControls(data.inputs), ...(s.controls ?? {}) });
-    setStorm(s.storm); setPick(s.pick ?? null); setPanel(s.panel ?? null); setAbout(false); setPreset(null);
+    setStorm(s.storm); setBasis(s.basis ?? "capacity"); setPick(s.pick ?? null); setPanel(s.panel ?? null); setAbout(false); setPreset(null);
     const h = s.route ? `#/${s.route}` : "#/demo";
     if (location.hash.split("?")[0] !== h) history.replaceState(null, "", h + (location.hash.includes("?") ? "?" + location.hash.split("?")[1] : ""));
     dispatchEvent(new HashChangeEvent("hashchange"));
@@ -188,6 +212,9 @@ export default function App() {
     return () => removeEventListener("keydown", f);
   }, [demo]);
 
+  const startDemo = () => { setDemo(0); setPlaying(false); location.hash = "#/demo"; };
+  const rail = <Rail route={route} panel={panel} setPanel={setPanel} onAbout={() => setAbout(true)} onDemo={startDemo} />;
+  if (route === "") return <Landing rail={rail} onEnter={() => { location.hash = "#/planner?from=map"; }} onDemo={startDemo} />;
   if (error) return <div className="loading">Could not load the model data: {error}</div>;
   if (!data || !res || !controls) return <div className="loading"><div className="loader" />LOADING THE TOWNSHIP</div>;
 
@@ -196,12 +223,10 @@ export default function App() {
   const changed = changedInputs(controls, data.inputs);
   const status = changed.length ? "whatif" : "sourced";
   const step = demo !== null ? STEPS[demo] : null;
-  const startDemo = () => { setDemo(0); setPlaying(false); };
-  const rail = <Rail route={route} panel={panel} setPanel={setPanel} onAbout={() => setAbout(true)} onDemo={startDemo} />;
   const demoBar = demo !== null && (
     <DemoBar step={demo} ctx={{ base: data.outputs, cur: res, inputs: data.inputs }} playing={playing} clean={clean} go={go}
       togglePlay={() => setPlaying(!playing)} toggleClean={() => setClean(!clean)} exit={exit}
-      legend={route !== "brief" && route !== "resident" ? <Legend results={res} scenario={scenario} storm={storm} /> : undefined} />
+      legend={route !== "brief" && route !== "resident" ? <Legend results={res} scenario={scenario} storm={storm} basis={basis} /> : undefined} />
   );
 
   if (route === "brief" || route === "resident") {
@@ -232,24 +257,24 @@ export default function App() {
           <Camera focus={step && !step.route ? step.focus : null} view={view} nonce={nonce}
             inset={[clean ? 0 : 60 + (panel ? 364 : 0), clean || (demo !== null && innerWidth < 1100) ? 0 : 342]} />
           <Suspense fallback={null}>
-            <Township results={res} scenario={scenario} storm={storm} controls={controls} trees={data.trees.trees} pick={pick}
-              layers={layers} onPick={setPick} onReady={setAnchors} onHover={setHover} />
-            {anchors && <Overlays anchors={anchors} council={data.overlays.council_line.paths as any} results={res} scenario={scenario}
+            <Township results={res} scenario={scenario} basis={basis} storm={storm} controls={controls} trees={data.trees.trees} pick={pick}
+              layers={layers} onPick={setPick} onReady={setAnchors} onHover={setHover} onShown={() => setShown(true)} />
+            {anchors && labelsOn && <Overlays anchors={anchors} council={data.overlays.council_line.paths as any} results={res} scenario={scenario} basis={basis}
               controls={controls} storm={storm} layers={layers} pickZone={(id) => setPick({ kind: "zone", id })} />}
             {anchors && points.length > 0 && <Pointers items={points} anchors={anchors} />}
           </Suspense>
           <Rain strength={storm * rainK} />
         </Canvas>
       </div>
-      {!ready && <div className="loading" style={{ pointerEvents: "none" }}><div className="loader" />LOADING THE TOWNSHIP</div>}
+      <div className={`planner-curtain ${shown ? "off" : ""}`}><div className="loader" /><span>OPENING THE CATCHMENT MODEL</span></div>
       <StatusBar status={status} storm={storm} res={res} scenario={scenario} scenarioName={scenarioName(controls)} ari={controls.ari}
         onAbout={() => setAbout(true)} onDemo={startDemo} />
       {rail}
-      {panel === "controls" && <ControlPanel inputs={data.inputs} c={controls} set={setControls} preset={preset} setPreset={setPreset} close={() => setPanel(null)} />}
+      {panel === "controls" && <ControlPanel data={data} inputs={data.inputs} c={controls} set={setControls} preset={preset} setPreset={setPreset} setBasis={setBasis} close={() => setPanel(null)} />}
       {panel === "layers" && <LayersPanel layers={layers} set={setLayers} close={() => setPanel(null)} />}
       <div className="right-col">
-        <Card pick={pick} results={res} inputs={data.inputs} routes={data.routes} scenario={scenario} close={() => setPick(null)} />
-        <Results res={res} base={data.outputs} scenario={scenario} name={scenarioName(controls)} c={controls} storm={storm} />
+        <Card pick={pick} results={res} inputs={data.inputs} routes={data.routes} scenario={scenario} basis={basis} close={() => setPick(null)} />
+        <Results res={res} base={data.outputs} scenario={scenario} name={scenarioName(controls)} c={controls} storm={storm} basis={basis} />
       </div>
       {demo === null && (
         <div className="viewbar">
@@ -262,11 +287,18 @@ export default function App() {
             <button className={storm < 0.5 ? "on" : ""} onClick={() => setStorm(0)}><Sun size={13} /> CLEAR</button>
             <button className={storm > 0.5 ? "on storm" : ""} onClick={() => setStorm(1)}><CloudRain size={13} /> STORM</button>
           </div>
+          <span className="seg-cap">COLOUR BY</span>
+          <div className="seg" title="What the zone colours show in the storm">
+            <button className={basis === "capacity" ? "on" : ""} onClick={() => setBasis("capacity")}
+              title="Is there room for the water? Each zone against the pond or drain it drains to">STORAGE SHORTFALL</button>
+            <button className={basis === "change" ? "on" : ""} onClick={() => setBasis("change")}
+              title="Did this scenario make it better or worse than today's land cover?">CHANGE FROM TODAY</button>
+          </div>
           {changed.length > 0 && <span className="changed-note">Changed: {changed.join(", ")}</span>}
         </div>
       )}
       <Footer hover={hover} zoneName={hover?.zone ? data.inputs.zones[hover.zone]?.name : undefined}
-        legend={<Legend results={res} scenario={scenario} storm={storm} />} />
+        legend={<Legend results={res} scenario={scenario} storm={storm} basis={basis} />} />
       <Ticker />
       {step?.ui && <Spotlight items={step.ui} />}
       {demoBar}
