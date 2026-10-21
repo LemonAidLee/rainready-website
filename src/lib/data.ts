@@ -134,24 +134,24 @@ export const PRESET_GROUPS: Record<PresetGroup, string> = {
   problem: "The problem", upstream: "Across the council line", fixes: "Fixes to test",
 };
 export interface Preset {
-  id: string; group: PresetGroup; label: string; blurb: string; basis: Basis; wide?: boolean;
+  id: string; group: PresetGroup; label: string; blurb: string; show: Basis; wide?: boolean;   // show: the card's summary
   set: (s: Controls) => Partial<Controls>;
 }
 
 export const PRESETS: Preset[] = [
-  { id: "today", group: "problem", label: "Today's design storm", basis: "capacity", set: () => ({}),
+  { id: "today", group: "problem", label: "Today's design storm", show: "capacity", set: () => ({}),
     blurb: "100-year storm on today's land. Where is there not enough room?" },
-  { id: "common", group: "problem", label: "A common heavy storm", basis: "capacity", set: () => ({ ari: 2 }),
+  { id: "common", group: "problem", label: "A common heavy storm", show: "capacity", set: () => ({ ari: 2 }),
     blurb: "2-year storm (50 % chance each year). The shared drain fills first" },
-  { id: "builtout", group: "upstream", label: "Upstream builds out", basis: "change", set: () => ({ dev: 1 }),
+  { id: "builtout", group: "upstream", label: "Upstream builds out", show: "change", set: () => ({ dev: 1 }),
     blurb: "Area A paved where peak control falls short" },
-  { id: "bigcatch", group: "upstream", label: "Larger upstream catchment", basis: "change", set: () => ({ dev: 1, extArea: 200 }),
+  { id: "bigcatch", group: "upstream", label: "Larger upstream catchment", show: "change", set: () => ({ dev: 1, extArea: 200 }),
     blurb: "200 ha of Area A drains through the crossing" },
-  { id: "pond", group: "fixes", label: "Add a pond", basis: "change", set: () => ({ pond: true, pondSize: 40000 }),
+  { id: "pond", group: "fixes", label: "Add a pond", show: "change", set: () => ({ pond: true, pondSize: 40000 }),
     blurb: "40,000 m³ on vacant land in Z06, before pond A" },
-  { id: "drain", group: "fixes", label: "Widen the shared drain", basis: "capacity", set: () => ({ drainTopWidth: 10 }),
+  { id: "drain", group: "fixes", label: "Widen the shared drain", show: "capacity", set: () => ({ drainTopWidth: 10 }),
     blurb: "10 m, like the main ditch: ponds can release" },
-  { id: "together", group: "fixes", label: "Fix it together", basis: "capacity", wide: true,
+  { id: "together", group: "fixes", label: "Fix it together", show: "capacity", wide: true,
     set: () => ({ dev: 1, pond: true, pondSize: 40000, drainTopWidth: 10 }),
     blurb: "Upstream built out. The pond alone or the 10 m drain alone leaves red; together they clear it" },
 ];
@@ -160,7 +160,7 @@ export const PRESETS: Preset[] = [
 export function presetSummary(d: Loaded, pr: Preset): string {
   const c = applyPreset(d.inputs, pr), sc = results(d, c).scenarios[scenarioOf(c)];
   const t = sc.trunk_drain, A = sc.ponds.pond_A, B = sc.ponds.pond_B;
-  if (pr.basis === "capacity") {
+  if (pr.show === "capacity") {
     const full = (p: any, id: string) => `${Math.round((p.storage_required_m3 / (p.capacity_m3 ?? ASSUMED_CAP[id])) * 100)} %`;
     return `A ${full(A, "pond_A")} · B ${full(B, "pond_B")} · drain ${Math.round(t.ratio * 100)} %`;
   }
@@ -185,17 +185,14 @@ export function applyPreset(inp: any, p: Preset): Controls {
 }
 
 /**
- * What the zone colours measure (team leader, 21 Oct 2026: "capacity" is the default, so today's shortfall shows):
- *   capacity  each zone against the capacity of what it drains to: the what-if pond when it catches the zone, else
- *             its pond (stated, else ASSUMED_CAP, L) or the trunk drain (its assumed conveyance). Worked out here
- *             from the results; screening.ts is unchanged
- *   change    the screening's own bands: change from today (today is the neutral baseline), or the entered
- *             capacity once a planner enters one; a fall of 5 % or more gets its own colour ("better")
+ * One risk band on the map (team leader, 21 Oct 2026): every area is coloured by room for water, in every preset;
+ * change from today shows as ▲ / ▼ on the zone tags (changeTag), never as a second colour scale.
+ *   capacity  the map's band: each zone against the capacity of what it drains to: the what-if pond when it catches
+ *             the zone, else its pond (stated, else ASSUMED_CAP, L) or the trunk drain (its assumed conveyance).
+ *             Worked out here from the results; screening.ts is unchanged
+ *   change    words only (the Brief's scenario columns): the screening's change from today, or the entered capacity
  */
 export type Basis = "capacity" | "change";
-// Colours mean one thing each (team leader, 21 Oct 2026): green / amber / red only ever describe room for water
-// (storage shortfall). The change view has its own scale: blue better, grey about the same, violet worse, magenta
-// much worse.
 export type Change = "better" | "same" | "worse" | "muchworse";
 export type Look = Band | "base" | Change;
 const CAP_MEDIUM = 0.8, CAP_HIGH = 1.0;                       // as inputs.json method.band_capacity_*_from
@@ -214,6 +211,19 @@ export function capacityLoad(z: any, sc: any): { ratio: number; of: string } | n
   }
   if (to === "trunk_drain") return { ratio: sc.trunk_drain.ratio, of: "the trunk drain's assumed capacity" };
   return null;
+}
+
+/** Change from today for a zone, as a ratio (1 = no change): its pond's storage need, or the trunk drain's flow. */
+export function zoneChange(z: any, sc: any): number | null {
+  if (z.drains_to in sc.ponds) return sc.ponds[z.drains_to].change_vs_now;
+  if (z.drains_to === "trunk_drain") return sc.trunk_drain.change_vs_now;
+  return null;
+}
+
+/** "▲ 10 %" / "▼ 17 %" when a zone's load moved by 5 % or more from today, else null (the zone tags' change marker). */
+export function changeTag(r: number | null): string | null {
+  if (r === null || Math.abs(r - 1) < 0.05) return null;
+  return `${r > 1 ? "▲" : "▼"} ${Math.round(Math.abs(r - 1) * 100)} %`;
 }
 
 /** Colour and label of a zone in one scenario (sc = results.scenarios[scenario]). */
@@ -237,5 +247,4 @@ export function zoneLook(z: any, scenario: ScenarioId, sc: any, basis: Basis): {
 
 export const BAND_COLOR: Record<string, string> = {
   low: "#1fbf75", medium: "#f2a516", high: "#ff4a3d", unknown: "#6b7785", base: "#c9d4de",
-  better: "#3aa0ff", same: "#8d9aa8", worse: "#b07cff", muchworse: "#e957e6",
 };

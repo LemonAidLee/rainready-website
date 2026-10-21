@@ -9,7 +9,7 @@ import { useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
-import { BAND_COLOR, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
+import { BAND_COLOR, changeTag, zoneChange, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
 import { m3 } from "../lib/format";
 import type { Anchors, Layers, V3 } from "./Township";
 
@@ -265,7 +265,7 @@ export function Overlays(p: {
         {(detail || p.storm > 0.5) && Object.keys(sc.zones).map((id) => pos(`label_zone_${id}`) && (
           <Html key={id} position={pos(`label_zone_${id}`)!} center zIndexRange={[1, 0]}>
             <button className="tag tag-zone" style={{ ["--b" as any]: BAND_COLOR[p.storm > 0.5 ? bandOf(id) : "base"] }}
-              onClick={() => p.pickZone(id)}>{id}</button></Html>
+              onClick={() => p.pickZone(id)}>{id}{(() => { const c = changeTag(zoneChange(sc.zones[id], sc)); return c && <em>{c}</em>; })()}</button></Html>
         ))}
         {(["pond_A", "pond_B"] as const).map((id) => p.anchors.ponds[id] && (
           <Html key={id} position={[p.anchors.ponds[id][0], p.anchors.ponds[id][1] + 26, p.anchors.ponds[id][2]]} {...html}>

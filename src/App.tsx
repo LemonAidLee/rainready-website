@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { CloudRain, Crosshair, Sun } from "lucide-react";
 import { adjustedInputs, changedInputs, loadAll, results as computeResults, scenarioName, scenarioOf, sourcedControls,
          type Basis, type Controls, type Loaded } from "./lib/data";
-import { Township, type Anchors, type Layers, type Pick, type V3 } from "./scene/Township";
+import { REVEAL_MS, Township, type Anchors, type Layers, type Pick, type V3 } from "./scene/Township";
 import { EXT_ORIGIN, Overlays, Pointers, type PointAt } from "./scene/Overlays";
 import { Rain } from "./scene/Rain";
 import { WaterBackdrop } from "./scene/WaterBackdrop";
@@ -21,6 +21,7 @@ const TARGET: [number, number, number] = [239, 0, 105];      // model centre in 
 const ISO = [0.62, 0.95, 1.0];                               // isometric-style view from the south-south-east
 const TOP = [0.0, 1.0, 0.03];
 type View = "iso" | "top";
+const VIEW_ARC_MS = 1800;                                    // top <-> 3D camera swing
 
 function Camera({ focus, view, nonce, inset }: { focus: Focus | null; view: View; nonce: number; inset: [number, number] }) {
   const { size, camera } = useThree();
@@ -38,12 +39,32 @@ function Camera({ focus, view, nonce, inset }: { focus: Focus | null; view: View
   const d = 4000;
   const dirOf = (v: number[]) => { const n = Math.hypot(v[0], v[1], v[2]); return new THREE.Vector3(v[0] / n, v[1] / n, v[2] / n); };
   const dir = useMemo(() => dirOf(view === "top" ? TOP : ISO), [view]);
+  // the camera's start, set once: a changing position prop would jump the camera before the view arc can move it
+  const start = useMemo(() => [TARGET[0] + dir.x * d, TARGET[1] + dir.y * d, TARGET[2] + dir.z * d] as [number, number, number], []);
   const want = useMemo(() => new THREE.Vector3(), []);
   const glideUntil = useRef(0);
   useEffect(() => { glideUntil.current = performance.now() + 1600; }, [nonce, view]);
-  // guided demo, view switch or reset: glide to the focus (target and zoom) along the view direction
+  // a view switch (top <-> 3D) swings the camera along an eased arc of fixed length, so it starts and ends softly
+  const arc = useRef<{ t0: number; from: THREE.Vector3 } | null>(null);
+  const lastView = useRef(view);
+  useEffect(() => {          // only on a real switch: at mount the camera already starts in its view
+    const c = controls.current;
+    if (lastView.current === view || !c) return;
+    lastView.current = view;
+    arc.current = { t0: performance.now(), from: camera.position.clone().sub(c.target).normalize() };
+  }, [view]);
+  const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
     const c = controls.current;
+    if (c && arc.current && !focus) {
+      const u = Math.min(1, (performance.now() - arc.current.t0) / VIEW_ARC_MS);
+      const e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+      camera.position.copy(c.target).addScaledVector(tmp.copy(arc.current.from).lerp(dir, e).normalize(), d);
+      c.update();
+      if (u >= 1) arc.current = null;
+      return;
+    }
+    // guided demo or reset: glide to the focus (target and zoom) along the view direction
     if (!c || (!focus && performance.now() > glideUntil.current)) return;
     const f = focus ?? { t: TARGET, k: 1 };
     const k = Math.min(1, dt * 2.2);
@@ -56,8 +77,7 @@ function Camera({ focus, view, nonce, inset }: { focus: Focus | null; view: View
   });
   return (
     <>
-      <OrthographicCamera makeDefault zoom={zoom} near={10} far={20000}
-        position={[TARGET[0] + dir.x * d, TARGET[1] + dir.y * d, TARGET[2] + dir.z * d]} />
+      <OrthographicCamera makeDefault zoom={zoom} near={10} far={20000} position={start} />
       <OrbitControls ref={controls} target={TARGET} enableDamping dampingFactor={0.08} minZoom={zoom * 0.5} maxZoom={zoom * 14}
         minPolarAngle={0.02} maxPolarAngle={1.25} screenSpacePanning={false} enabled={!focus} />
     </>
@@ -106,7 +126,8 @@ export default function App() {
   const [controls, setControls] = useState<Controls | null>(null);
   const [preset, setPreset] = useState<string | null>("today");
   const [storm, setStorm] = useState(0);
-  const [basis, setBasis] = useState<Basis>("capacity");     // what the zone colours measure (data.ts)
+  // the map always shows one risk band (room for water); changes from today show as arrows on the zone tags
+  const basis: Basis = "capacity";
   const [pick, setPick] = useState<Pick>(null);
   const [panel, setPanel] = useState<Panel>(innerWidth > 900 ? "controls" : null);
   const [layers, setLayers] = useState<Layers>(LAYERS);
@@ -123,7 +144,8 @@ export default function App() {
   useEffect(() => { loadAll().then((d) => { setData(d); setControls(sourcedControls(d.inputs)); }).catch((e) => setError(String(e))); }, []);
   const ready = anchors !== null;
   // the planner opens behind a curtain while the first frames compile every shader (Township onShown), then the
-  // township grows outwards (REVEAL in Township); labels, the camera glide and the storm follow in that order
+  // township grows outwards (REVEAL in Township), already in the storm. Arriving from the map it grows in the top
+  // view, then the camera swings into 3D (VIEW_ARC_MS); the labels fade in
   const [shown, setShown] = useState(false);
   const [labelsOn, setLabelsOn] = useState(false);
   useEffect(() => { if (route === "" || route === "brief" || route === "resident") { setShown(false); setLabelsOn(false); } }, [route]);
@@ -135,22 +157,19 @@ export default function App() {
   useEffect(() => {          // #/demo starts the guided demo once the model is in
     if (ready && demo === null && route === "demo") { setDemo(0); setPlaying(location.hash.includes("play")); setClean(location.hash.includes("clean")); }
   }, [ready]);
-  useEffect(() => {          // after the reveal, the storm starts (outside the demo, which sets its own)
-    if (!shown || demo !== null) return;
-    const t = setTimeout(() => setStorm(1), 2000);
-    return () => clearTimeout(t);
+  useEffect(() => {          // the storm is on as the township appears, so nothing changes after it (the demo sets its own)
+    if (shown && demo === null) setStorm(1);
   }, [shown]);
   useEffect(() => {          // #/demo opened while the page is already loaded
     if (ready && demo === null && route === "demo") { setDemo(0); setPlaying(location.hash.includes("play")); setClean(location.hash.includes("clean")); }
   }, [route]);
   const res = useMemo(() => (data && controls ? computeResults(data, controls) : null), [data, controls]);
-  useEffect(() => {          // the landing map: forget the last model's anchors; arriving from it, start top-down
-    if (route === "") { setAnchors(null); return; }
-    if (route === "planner" && location.hash.includes("from=map")) setView("top");
+  useEffect(() => {          // the landing map: forget the last model's anchors
+    if (route === "") setAnchors(null);
   }, [route]);
-  useEffect(() => {          // ... then, as the reveal finishes, glide into the 3D view
+  useEffect(() => {          // arriving from the map (top view): once the township has grown, swing into 3D
     if (!shown || route !== "planner" || !location.hash.includes("from=map")) return;
-    const t = setTimeout(() => { setView("iso"); history.replaceState(null, "", "#/planner"); }, 1500);
+    const t = setTimeout(() => { setView("iso"); history.replaceState(null, "", "#/planner"); }, REVEAL_MS + 150);
     return () => clearTimeout(t);
   }, [shown, route]);
 
@@ -174,7 +193,7 @@ export default function App() {
   // ---- guided demo: each step sets the app's state
   const go = useCallback((i: number) => setDemo(Math.max(0, Math.min(STEPS.length - 1, i))), []);
   const exit = useCallback(() => {
-    setDemo(null); setPlaying(false); setClean(false); setPick(null); setBasis("capacity");
+    setDemo(null); setPlaying(false); setClean(false); setPick(null);
     if (data) setControls(sourcedControls(data.inputs));
     setPreset("today"); setNonce((n) => n + 1); setPanel(innerWidth > 900 ? "controls" : null);
     location.hash = "#/planner";
@@ -183,7 +202,7 @@ export default function App() {
     if (demo === null || !data) return;
     const s = STEPS[demo];
     setControls({ ...sourcedControls(data.inputs), ...(s.controls ?? {}) });
-    setStorm(s.storm); setBasis(s.basis ?? "capacity"); setPick(s.pick ?? null); setPanel(s.panel ?? null); setAbout(false); setPreset(null);
+    setStorm(s.storm); setPick(s.pick ?? null); setPanel(s.panel ?? null); setAbout(false); setPreset(null);
     const h = s.route ? `#/${s.route}` : "#/demo";
     if (location.hash.split("?")[0] !== h) history.replaceState(null, "", h + (location.hash.includes("?") ? "?" + location.hash.split("?")[1] : ""));
     dispatchEvent(new HashChangeEvent("hashchange"));
@@ -214,7 +233,7 @@ export default function App() {
 
   const startDemo = () => { setDemo(0); setPlaying(false); location.hash = "#/demo"; };
   const rail = <Rail route={route} panel={panel} setPanel={setPanel} onAbout={() => setAbout(true)} onDemo={startDemo} />;
-  if (route === "") return <Landing rail={rail} onEnter={() => { location.hash = "#/planner?from=map"; }} onDemo={startDemo} />;
+  if (route === "") return <Landing rail={rail} onEnter={() => { setView("top"); location.hash = "#/planner?from=map"; }} onDemo={startDemo} />;
   if (error) return <div className="loading">Could not load the model data: {error}</div>;
   if (!data || !res || !controls) return <div className="loading"><div className="loader" />LOADING THE TOWNSHIP</div>;
 
@@ -270,7 +289,7 @@ export default function App() {
       <StatusBar status={status} storm={storm} res={res} scenario={scenario} scenarioName={scenarioName(controls)} ari={controls.ari}
         onAbout={() => setAbout(true)} onDemo={startDemo} />
       {rail}
-      {panel === "controls" && <ControlPanel data={data} inputs={data.inputs} c={controls} set={setControls} preset={preset} setPreset={setPreset} setBasis={setBasis} close={() => setPanel(null)} />}
+      {panel === "controls" && <ControlPanel data={data} inputs={data.inputs} c={controls} set={setControls} preset={preset} setPreset={setPreset} close={() => setPanel(null)} />}
       {panel === "layers" && <LayersPanel layers={layers} set={setLayers} close={() => setPanel(null)} />}
       <div className="right-col">
         <Card pick={pick} results={res} inputs={data.inputs} routes={data.routes} scenario={scenario} basis={basis} close={() => setPick(null)} />
@@ -286,13 +305,6 @@ export default function App() {
           <div className="seg">
             <button className={storm < 0.5 ? "on" : ""} onClick={() => setStorm(0)}><Sun size={13} /> CLEAR</button>
             <button className={storm > 0.5 ? "on storm" : ""} onClick={() => setStorm(1)}><CloudRain size={13} /> STORM</button>
-          </div>
-          <span className="seg-cap">COLOUR BY</span>
-          <div className="seg" title="What the zone colours show in the storm">
-            <button className={basis === "capacity" ? "on" : ""} onClick={() => setBasis("capacity")}
-              title="Is there room for the water? Each zone against the pond or drain it drains to">STORAGE SHORTFALL</button>
-            <button className={basis === "change" ? "on" : ""} onClick={() => setBasis("change")}
-              title="Did this scenario make it better or worse than today's land cover?">CHANGE FROM TODAY</button>
           </div>
           {changed.length > 0 && <span className="changed-note">Changed: {changed.join(", ")}</span>}
         </div>

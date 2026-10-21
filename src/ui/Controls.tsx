@@ -35,7 +35,7 @@ function Section(p: { n: string; icon: ReactNode; title: string; watch: string; 
 }
 
 export function ControlPanel(p: { data: Loaded; inputs: any; c: Controls; set: (c: Controls) => void; preset: string | null;
-                                  setPreset: (id: string | null) => void; setBasis: (b: Basis) => void; close: () => void }) {
+                                  setPreset: (id: string | null) => void; close: () => void }) {
   const s = sourcedControls(p.inputs), c = p.c;
   const summaries = useMemo(() => Object.fromEntries(PRESETS.map((pr) => [pr.id, presetSummary(p.data, pr)])), [p.data]);
   const set = (patch: Partial<Controls>) => { p.set({ ...c, ...patch }); p.setPreset(null); };
@@ -48,9 +48,9 @@ export function ControlPanel(p: { data: Loaded; inputs: any; c: Controls; set: (
           <Fragment key={pr.id}>
             {pr.group !== PRESETS[i - 1]?.group && <div className={`preset-group g-${pr.group}`}>{PRESET_GROUPS[pr.group]}</div>}
             <button className={`preset g-${pr.group} ${pr.wide ? "wide" : ""} ${p.preset === pr.id ? "on" : ""}`}
-              onClick={() => { p.set(applyPreset(p.inputs, pr)); p.setPreset(pr.id); p.setBasis(pr.basis); }}>
+              onClick={() => { p.set(applyPreset(p.inputs, pr)); p.setPreset(pr.id); }}>
               <b>{pr.label}</b><small>{pr.blurb}</small>
-              <em title={pr.basis === "capacity" ? "Share of capacity (assumed for ponds, L)" : "Change from today"}>{summaries[pr.id]}</em>
+              <em title={pr.show === "capacity" ? "Share of capacity (assumed for ponds, L)" : "Change from today"}>{summaries[pr.id]}</em>
             </button>
           </Fragment>
         ))}
@@ -109,7 +109,7 @@ export function ControlPanel(p: { data: Loaded; inputs: any; c: Controls; set: (
           Use the assumed capacities (mapped area × 1.5 m, L)</button>
       </Section>
 
-      <button className="reset" onClick={() => { p.set(sourcedControls(p.inputs)); p.setPreset("today"); p.setBasis("capacity"); }}>
+      <button className="reset" onClick={() => { p.set(sourcedControls(p.inputs)); p.setPreset("today"); }}>
         <RotateCcw size={13} /> Reset to the sourced values</button>
     </aside>
   );

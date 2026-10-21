@@ -76,12 +76,12 @@ export function Legend({ results, scenario, storm, basis }: { results: any; scen
   if (scenario === "now" && vs === "change")
     return <span className="lg-note">Today is the baseline · move a lever to see what changes</span>;
   const assumed = basis === "capacity" && ["pond_A", "pond_B"].some((id) => results.scenarios[scenario].ponds[id].capacity_m3 === null);
-  const items = vs === "capacity"
-    ? [["low", "room to spare", "under 80 % full"], ["medium", "nearly full", "80–100 % full"], ["high", "not enough room", "over 100 %: more water than room"], ["unknown", "outlet unknown", ""]]
-    : [["better", "better", "more than 5 % less than today"], ["same", "about the same", "within 5 % of today"], ["worse", "worse", "up 5–20 % on today"], ["muchworse", "much worse", "up more than 20 % on today"], ["unknown", "outlet unknown", ""]];
+  const items = [["low", "room to spare", "under 80 % full"], ["medium", "nearly full", "80–100 % full"],
+                 ["high", "not enough room", "over 100 %: more water than room"], ["unknown", "outlet unknown", ""]];
   return <>
     {vs === "capacity" && assumed && <span className="lg-note" title="No pond capacity is public: mapped water area × 1.5 m, confidence L. Not flood depths.">On assumed capacities (L):</span>}
     {items.map(([b, t, tip]) => <span key={b} className="lg" title={tip}><i style={{ background: BAND_COLOR[b] }} />{t}</span>)}
+    {scenario !== "now" && <span className="lg-note" title="Change in the load of each zone's pond or drain, compared with today">▲▼ change from today</span>}
   </>;
 }
 
@@ -159,7 +159,7 @@ export function About(p: { inputs: any; results: any; close: () => void }) {
           <li>Peak flow per zone by the Rational Method, Q = C·i·A/360 (Eq. 2.3); C from Table 2.5, area-weighted over each zone's land cover. All zones are under the method's 80 ha limit.</li>
           <li>Runoff volume = Q × duration (Rational Hydrograph Method, 2.3.2).</li>
           <li>Ponds may release at most the pre-development peak flow (MSMA 1.2.1, Qpost ≤ Qpre; former oil palm, C 0.40), and only what the shared trunk drain still has room for (Manning, assumed section).</li>
-          <li>Storage required = inflow − release. Stated pond capacities are not public, so they are a planner input. Until one is entered, the map's <b>Storage shortfall</b> colours measure each zone against an assumed capacity (mapped water area × 1.5 m of live storage, confidence L) or, for zones on the trunk drain, against its assumed conveyance: red is "not enough room" for the water in the design storm, not a flood depth. <b>Change from today</b> colours a scenario by whether it is better or worse than today's land cover.</li>
+          <li>Storage required = inflow − release. Stated pond capacities are not public, so they are a planner input. Until one is entered, the map's <b>Storage shortfall</b> colours measure each zone against an assumed capacity (mapped water area × 1.5 m of live storage, confidence L) or, for zones on the trunk drain, against its assumed conveyance: red is "not enough room" for the water in the design storm, not a flood depth. In a scenario, zone tags also show <b>▲ / ▼</b>: how much the load on the zone's pond or drain changed from today. There is one colour scale only.</li>
         </ol>
         <h3>Independent cross-check</h3>
         <p>A teammate ran FastFlood (Fast Hazard B.V., v1.0.20; Copernicus GLO-30 at 20 m, ESA WorldCover, GPM IMERG design rain) over the same area for a 100-year storm. It shows water collecting in ponds A and B and along the east–west drain corridors, as our zones assume, and an effective runoff coefficient of 0.78–0.79 against our 0.63–0.78. We do not show its depth map: terrain error here is about 1 m. See research/FASTFLOOD_CROSSCHECK.md.</p>

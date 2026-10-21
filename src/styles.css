@@ -161,7 +161,6 @@ input:checked + .sw { background: rgba(53, 208, 230, 0.35); }
 input:checked + .sw::after { transform: translateX(14px); background: var(--cyan); }
 input:focus-visible + .sw { outline: 2px solid var(--gold); outline-offset: 2px; }
 .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 3px; overflow: hidden; background: var(--panel); }
-.seg-cap { align-self: center; margin: 0 -2px 0 6px; font: 600 9.5px/1 var(--mono); letter-spacing: 0.14em; color: var(--text-3); }
 .seg button { border: 0; background: transparent; color: var(--text-3); height: 28px; padding: 0 10px; font-size: 10.5px; letter-spacing: 0.08em;
   display: inline-flex; align-items: center; gap: 5px; }
 .seg button + button { border-left: 1px solid var(--line); }
@@ -190,7 +189,7 @@ input:focus-visible + .sw { outline: 2px solid var(--gold); outline-offset: 2px;
 .res-v { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 5px 0 6px; }
 .res-v b { font: 600 22px/1 var(--mono); letter-spacing: -0.02em; color: var(--text); font-variant-numeric: tabular-nums; }
 .delta { font: 500 10.5px/1 var(--mono); color: var(--text-3); white-space: nowrap; }
-.delta.up { color: #c59bff; } .delta.down { color: var(--water); }   /* the change scale, not the room-for-water bands */
+.delta.up, .delta.down { color: var(--text); }   /* arrows carry the change; colour means room for water only */
 .bar { position: relative; height: 4px; background: rgba(130, 170, 200, 0.14); border-radius: 2px; }
 .bar i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 2px; transform-origin: left center; transition: transform 0.5s ease, background 0.4s; }
 .bar em { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--text); opacity: 0.7; }
@@ -463,3 +462,4 @@ table.t td.num { text-align: right; font-family: var(--mono); font-variant-numer
 .gl-dot.orange { background: #ffa04a; box-shadow: 0 0 8px #ffa04a; }
 .gl-ring.rose { margin-left: 0; border-color: #ffc9b8; }
 .landing { user-select: none; -webkit-user-select: none; }
+.tag-zone em { margin-left: 5px; font-style: normal; font-weight: 600; color: #fff; }   /* change from today */

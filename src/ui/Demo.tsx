@@ -18,7 +18,6 @@ export interface Step {
   body: (c: Ctx) => string;
   controls?: Partial<Controls>;                                      // on top of the sourced values
   storm: 0 | 1;
-  basis?: Basis;                                                     // what zone colours show (default: storage shortfall)
   pick?: Pick;
   panel?: Panel;
   route?: "" | "brief" | "resident";
@@ -49,19 +48,19 @@ export const STEPS: Step[] = [
     points: [{ at: "pond_A", label: "Pond A" }, { at: "pond_B", label: "Pond B" }],
     ui: [{ sel: '[data-spot="res-pond_A"]', label: "Storage required" }, { sel: '[data-spot="res-trunk"]', label: "Drain load" }],
     body: (c) => { const s = c.base.scenarios.now; return `Pond A must hold about ${m3(s.ponds.pond_A.storage_required_m3)} and pond B ${m3(s.ponds.pond_B.storage_required_m3)}. The shared trunk drain is at ${Math.round(s.trunk_drain.ratio * 100)}% of its assumed capacity, so the ponds can release ${s.ponds.pond_A.released_m3 + s.ponds.pond_B.released_m3 < 1 ? "nothing" : "only part of it"} during the storm. No pond capacity is public, so the colours use an assumed one (mapped area × 1.5 m, confidence L): against it, pond A is short by about ${m3(s.ponds.pond_A.storage_required_m3 - ASSUMED_CAP.pond_A)}. Storage required, not depth.`; } },
-  { title: "Scenario: more paved land upstream", storm: 1, basis: "change", controls: { dev: 1 }, panel: "controls", focus: { t: [1550, 0, -560], k: 1.5 }, ms: 10000,
+  { title: "Scenario: more paved land upstream", storm: 1, controls: { dev: 1 }, panel: "controls", focus: { t: [1550, 0, -560], k: 1.5 }, ms: 10000,
     points: [{ at: "label_area_A", label: "Blocks rise on open land in Area A" }, { at: "ext", label: "Area A beyond the model edge" }],
     ui: [{ sel: '[data-spot="dev"]', label: "Upstream development" }],
-    body: () => "The colours now show the change from today. Slide upstream development to 'built out': open land in Area A is paved where peak control is not fully achieved. Under MSMA's rule a fully controlled development would not raise peak flow; this scenario tests the case where it is not. A what-if, not a forecast." },
-  { title: "The shared drain carries more", storm: 1, basis: "change", controls: { dev: 1 }, focus: OVERVIEW, ms: 11000,
+    body: () => "Slide upstream development to 'built out': open land in Area A is paved where peak control is not fully achieved. Under MSMA's rule a fully controlled development would not raise peak flow; this scenario tests the case where it is not. A what-if, not a forecast." },
+  { title: "The shared drain carries more", storm: 1, controls: { dev: 1 }, focus: OVERVIEW, ms: 11000,
     points: [{ at: "trunk", label: "Shared trunk drain: load rises" }],
     ui: [{ sel: '[data-spot="res-trunk"]', label: "Drain load vs today" }],
-    body: (c) => { const u = c.base.scenarios.upstream; return `With the upstream change, the shared trunk drain carries ${pct(u.trunk_drain.change_vs_now)} more. The zones that drain into it turn amber, on both sides of the council line.${u.trunk_drain.pond_release_share === 0 && c.base.scenarios.now.trunk_drain.pond_release_share === 0 ? " The ponds' storage need stays the same: the drain is already full, so they release nothing either way." : ""} This is a difference between scenarios, not a finding of blame.`; } },
-  { title: "What if a pond is added?", storm: 1, basis: "change", controls: { dev: 1, pond: true }, panel: "controls", pick: null, focus: { t: [-560, 0, 300], k: 2.0 }, ms: 10000,
+    body: (c) => { const u = c.base.scenarios.upstream; return `With the upstream change, the shared trunk drain carries ${pct(u.trunk_drain.change_vs_now)} more. The zones that drain into it show ▲ ${pct(u.trunk_drain.change_vs_now)} on their tags, on both sides of the council line.${u.trunk_drain.pond_release_share === 0 && c.base.scenarios.now.trunk_drain.pond_release_share === 0 ? " The ponds' storage need stays the same: the drain is already full, so they release nothing either way." : ""} This is a difference between scenarios, not a finding of blame.`; } },
+  { title: "What if a pond is added?", storm: 1, controls: { dev: 1, pond: true }, panel: "controls", pick: null, focus: { t: [-560, 0, 300], k: 2.0 }, ms: 10000,
     points: [{ at: "pond_whatif", label: "What-if pond (invented)" }, { at: "pond_A", label: "Pond A needs less" }],
     ui: [{ sel: '[data-spot="pond"]', label: "What-if pond" }, { sel: '[data-spot="res-pond_A"]', label: "Pond A storage" }],
-    body: (c) => { const s = c.base.scenarios.upstream_plus_pond; return `A what-if pond on vacant land (OSM brownfield) holds ${m3(s.what_if_pond.capacity_m3)} during the storm. It cuts pond A's storage need by ${pct(s.ponds.pond_A.change_vs_now)}, so the zones that drain to pond A turn blue. Planners can test a pond, and its size, before anyone builds one.`; } },
-  { title: "The biggest unknown: the drain's size", storm: 1, basis: "change", controls: { dev: 1, drainTopWidth: 10 }, panel: "controls", focus: OVERVIEW, ms: 11000,
+    body: (c) => { const s = c.base.scenarios.upstream_plus_pond; return `A what-if pond on vacant land (OSM brownfield) holds ${m3(s.what_if_pond.capacity_m3)} during the storm. It cuts pond A's storage need by ${pct(s.ponds.pond_A.change_vs_now)}, so the zones that drain to pond A show ▼ on their tags. Planners can test a pond, and its size, before anyone builds one.`; } },
+  { title: "The biggest unknown: the drain's size", storm: 1, controls: { dev: 1, drainTopWidth: 10 }, panel: "controls", focus: OVERVIEW, ms: 11000,
     points: [{ at: "trunk", label: "Drain ribbon widens" }],
     ui: [{ sel: '[data-spot="drain"]', label: "Drain size: no public record" }, { sel: '[data-spot="res-pond_A"]', label: "Result moves" }],
     body: (c) => `No public record gives the shared drain's size, so it is a slider. At a main-ditch-like 10 m, the ponds can release, and the upstream change raises pond A's storage need by ${pct(c.cur.scenarios.upstream.ponds.pond_A.change_vs_now)}. Decision support under uncertainty: the unknown is shown, not hidden.` },
