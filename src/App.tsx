@@ -14,8 +14,11 @@ import { ControlPanel } from "./ui/Controls";
 import { Footer, LayersPanel, Rail, StatusBar, Ticker, type Panel } from "./ui/Shell";
 import { Brief } from "./ui/Brief";
 import { Landing } from "./ui/Landing";
-import { Resident } from "./ui/Resident";
-import { DemoBar, Spotlight, STEPS, type Focus } from "./ui/Demo";
+import { ResidentApp } from "./resident/ResidentApp";
+import { useReports } from "./resident/store";
+import { coordsOf, statusLabel } from "./resident/data";
+import { After } from "./ui/After";
+import { DemoBar, Spotlight, STEPS, type Ctx, type Focus } from "./ui/Demo";
 
 const TARGET: [number, number, number] = [239, 0, 105];      // model centre in glTF coordinates (x, up, -y)
 const ISO = [0.62, 0.95, 1.0];                               // isometric-style view from the south-south-east
@@ -56,7 +59,7 @@ function Camera({ focus, view, nonce, inset }: { focus: Focus | null; view: View
   const tmp = useMemo(() => new THREE.Vector3(), []);
   useFrame((_, dt) => {
     const c = controls.current;
-    if (c && arc.current && !focus) {
+    if (c && arc.current) {
       const u = Math.min(1, (performance.now() - arc.current.t0) / VIEW_ARC_MS);
       const e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
       camera.position.copy(c.target).addScaledVector(tmp.copy(arc.current.from).lerp(dir, e).normalize(), d);
@@ -118,7 +121,7 @@ function extraPoints(a: Anchors | null, c: Controls): Record<string, V3> {
   return out;
 }
 
-const LAYERS: Layers = { zones: true, labels: true, flow: true, boundary: true, trees: true, upstream: true };
+const LAYERS: Layers = { zones: true, labels: true, flow: true, boundary: true, trees: true, upstream: true, reports: true };
 
 export default function App() {
   const [data, setData] = useState<Loaded | null>(null);
@@ -148,30 +151,42 @@ export default function App() {
   // view, then the camera swings into 3D (VIEW_ARC_MS); the labels fade in
   const [shown, setShown] = useState(false);
   const [labelsOn, setLabelsOn] = useState(false);
-  useEffect(() => { if (route === "" || route === "brief" || route === "resident") { setShown(false); setLabelsOn(false); } }, [route]);
+  useEffect(() => { if (route === "" || route === "brief" || route === "resident" || route === "after") { setShown(false); setLabelsOn(false); } }, [route]);
   useEffect(() => {
     if (!shown) return;
     const t = setTimeout(() => setLabelsOn(true), 1000);
     return () => clearTimeout(t);
   }, [shown]);
-  useEffect(() => {          // #/demo starts the guided demo once the model is in
-    if (ready && demo === null && route === "demo") { setDemo(0); setPlaying(location.hash.includes("play")); setClean(location.hash.includes("clean")); }
-  }, [ready]);
+
   useEffect(() => {          // the storm is on as the township appears, so nothing changes after it (the demo sets its own)
     if (shown && demo === null) setStorm(1);
   }, [shown]);
-  useEffect(() => {          // #/demo opened while the page is already loaded
-    if (ready && demo === null && route === "demo") { setDemo(0); setPlaying(location.hash.includes("play")); setClean(location.hash.includes("clean")); }
+  useEffect(() => {          // #/demo (with ?play and ?clean for recording) starts the guided demo, on the map
+    if (demo === null && route === "demo") { setDemo(0); setPlaying(location.hash.includes("play")); setClean(location.hash.includes("clean")); }
   }, [route]);
   const res = useMemo(() => (data && controls ? computeResults(data, controls) : null), [data, controls]);
+  // resident reports (resident/store.ts): open ones become pins in the planner view
+  const reports = useReports();
+  const reportPins = useMemo(() => reports.filter((r) => r.status !== "Cleared").flatMap((r) => {
+    const c = coordsOf(r);
+    return c ? [{ id: r.id, issue: r.issue, status: r.status, label: statusLabel(r.status), lat: c[0], lon: c[1], sample: !!r.isSample }] : [];
+  }), [reports]);
+  // "Test in planner" on a drain report that drains to the shared drain: the drain 30 % blocked, in the storm
+  const testInPlanner = useCallback(() => {
+    if (!data) return;
+    setControls({ ...sourcedControls(data.inputs), blocked: 0.3 });
+    setPreset(null); setStorm(1); setPanel(innerWidth > 900 ? "controls" : null);
+    location.hash = "#/planner";
+  }, [data]);
   useEffect(() => {          // the landing map: forget the last model's anchors
     if (route === "") setAnchors(null);
   }, [route]);
-  useEffect(() => {          // arriving from the map (top view): once the township has grown, swing into 3D
-    if (!shown || route !== "planner" || !location.hash.includes("from=map")) return;
-    const t = setTimeout(() => { setView("iso"); history.replaceState(null, "", "#/planner"); }, REVEAL_MS + 150);
+  const fromMap = useRef(false);   // set by the map's fly-in: the planner opens top-down, grows, then swings into 3D
+  useEffect(() => {
+    if (!shown || !fromMap.current) return;
+    const t = setTimeout(() => { fromMap.current = false; setView("iso"); }, REVEAL_MS + 150);
     return () => clearTimeout(t);
-  }, [shown, route]);
+  }, [shown]);
 
   // a change to a lever briefly points at the part of the model it moves
   const prev = useRef<Controls | null>(null);
@@ -180,9 +195,11 @@ export default function App() {
     if (!a || !controls || demo !== null) return;
     const ch = (k: keyof Controls) => a[k] !== controls[k];
     const pts: PointAt[] = [];
-    if (ch("dev") || ch("extArea") || ch("extC")) pts.push({ at: "label_area_A", label: "Upstream development" }, { at: "ext", label: "Area A beyond the edge" });
-    if (ch("pond") || ch("pondSize")) pts.push({ at: "pond_whatif", label: "What-if pond" });
-    if (ch("drainTopWidth")) pts.push({ at: "trunk", label: "Shared trunk drain" });
+    if (ch("dev") || ch("extArea") || ch("extC")) pts.push({ at: "label_area_A", label: "Next parcels upstream" }, { at: "ext", label: "Area A beyond the edge" });
+    if (ch("pond") || ch("pondSize")) pts.push({ at: "pond_whatif", label: "New retrofit pond" });
+    if (ch("drainTopWidth")) pts.push({ at: "trunk", label: "Shared drain works" });
+    if (ch("blocked")) pts.push({ at: "trunk", label: `Shared drain ${Math.round(controls.blocked * 100)} % blocked` });
+    if (ch("silt")) pts.push({ at: "pond_A", label: `Pond A ${Math.round(controls.silt * 100)} % silted` }, { at: "pond_B", label: `Pond B ${Math.round(controls.silt * 100)} % silted` });
     if (ch("capA") || ch("capB")) pts.push({ at: "pond_A", label: "Pond A" }, { at: "pond_B", label: "Pond B" });
     if (!pts.length) return;
     setFlash(pts);
@@ -191,9 +208,17 @@ export default function App() {
   }, [controls]);
 
   // ---- guided demo: each step sets the app's state
-  const go = useCallback((i: number) => setDemo(Math.max(0, Math.min(STEPS.length - 1, i))), []);
+  const demoRef = useRef<number | null>(null);
+  demoRef.current = demo;
+  const [demoFly, setDemoFly] = useState(false);
+  const [national, setNational] = useState<Ctx["national"]>(undefined);
+  const go = useCallback((i: number) => {
+    const cur = demoRef.current, j = Math.max(0, Math.min(STEPS.length - 1, i));
+    if (cur !== null && STEPS[cur].route === "map" && j > cur) { setDemoFly(true); return; }   // fly in, then advance
+    setDemo(j);
+  }, []);
   const exit = useCallback(() => {
-    setDemo(null); setPlaying(false); setClean(false); setPick(null);
+    setDemo(null); setPlaying(false); setClean(false); setPick(null); setDemoFly(false);
     if (data) setControls(sourcedControls(data.inputs));
     setPreset("today"); setNonce((n) => n + 1); setPanel(innerWidth > 900 ? "controls" : null);
     location.hash = "#/planner";
@@ -203,15 +228,17 @@ export default function App() {
     const s = STEPS[demo];
     setControls({ ...sourcedControls(data.inputs), ...(s.controls ?? {}) });
     setStorm(s.storm); setPick(s.pick ?? null); setPanel(s.panel ?? null); setAbout(false); setPreset(null);
-    const h = s.route ? `#/${s.route}` : "#/demo";
+    const h = s.route === "map" ? "#/" : s.route ? `#/${s.route}` : "#/demo";
     if (location.hash.split("?")[0] !== h) history.replaceState(null, "", h + (location.hash.includes("?") ? "?" + location.hash.split("?")[1] : ""));
     dispatchEvent(new HashChangeEvent("hashchange"));
-    scrollTo({ top: 0 });
-    if (s.route === "brief") {     // on the Brief, glide down to the storage table while the caption is read
-      const t = setTimeout(() => scrollTo({ top: 300, behavior: "smooth" }), 3500);
+    if (s.route !== lastRoute.current) scrollTo({ top: 0 });
+    lastRoute.current = s.route;
+    if (s.route === "brief" && s.ui?.length) {   // on the Brief, glide to the section the step is about
+      const t = setTimeout(() => document.querySelector(s.ui![0].sel)?.scrollIntoView({ behavior: "smooth", block: "start" }), 2200);
       return () => clearTimeout(t);
     }
-  }, [demo]);
+  }, [demo, data !== null]);   // also once the data arrives (#/demo opened cold)
+  const lastRoute = useRef<string | undefined>(undefined);
   useEffect(() => {          // autoplay: advance after the step's time; stop at the last step
     if (demo === null || !playing) return;
     if (demo === STEPS.length - 1) { setPlaying(false); return; }
@@ -231,9 +258,23 @@ export default function App() {
     return () => removeEventListener("keydown", f);
   }, [demo]);
 
-  const startDemo = () => { setDemo(0); setPlaying(false); location.hash = "#/demo"; };
+  const startDemo = () => { setDemo(0); setPlaying(false); };   // step 1 sets the address (the map)
   const rail = <Rail route={route} panel={panel} setPanel={setPanel} onAbout={() => setAbout(true)} onDemo={startDemo} />;
-  if (route === "") return <Landing rail={rail} onEnter={() => { setView("top"); location.hash = "#/planner?from=map"; }} onDemo={startDemo} />;
+  const ctx: Ctx = { base: data?.outputs, cur: res, inputs: data?.inputs, national };
+  const demoControls = { playing, clean, go, togglePlay: () => setPlaying(!playing), toggleClean: () => setClean(!clean), exit };
+  if (route === "") {
+    // the fly-in lands: open the planner top-down (or, in the demo, move to the next step, which shows the planner)
+    const enter = () => {
+      setView("top"); fromMap.current = true;
+      if (demoRef.current !== null) { setDemoFly(false); setDemo(demoRef.current + 1); } else location.hash = "#/planner";
+    };
+    return (
+      <div className={clean ? "clean-frame" : ""}>
+        <Landing rail={rail} onEnter={enter} onDemo={startDemo} onData={setNational} fly={demoFly} />
+        {demo !== null && <DemoBar step={demo} ctx={ctx} {...demoControls} />}
+      </div>
+    );
+  }
   if (error) return <div className="loading">Could not load the model data: {error}</div>;
   if (!data || !res || !controls) return <div className="loading"><div className="loader" />LOADING THE TOWNSHIP</div>;
 
@@ -243,18 +284,17 @@ export default function App() {
   const status = changed.length ? "whatif" : "sourced";
   const step = demo !== null ? STEPS[demo] : null;
   const demoBar = demo !== null && (
-    <DemoBar step={demo} ctx={{ base: data.outputs, cur: res, inputs: data.inputs }} playing={playing} clean={clean} go={go}
-      togglePlay={() => setPlaying(!playing)} toggleClean={() => setClean(!clean)} exit={exit}
-      legend={route !== "brief" && route !== "resident" ? <Legend results={res} scenario={scenario} storm={storm} basis={basis} /> : undefined} />
+    <DemoBar step={demo} ctx={ctx} {...demoControls}
+      legend={route !== "brief" && route !== "resident" && route !== "after" ? <Legend results={res} scenario={scenario} storm={storm} basis={basis} /> : undefined} />
   );
 
-  if (route === "brief" || route === "resident") {
+  if (route === "brief" || route === "resident" || route === "after") {
     return (
       <div className={`page-shell ${demo !== null ? "with-demo" : ""} ${clean ? "clean-frame" : ""}`}>
         {rail}
         {route === "brief"
-          ? <Brief inputs={changed.length ? adjustedInputs(data.inputs, controls) : data.inputs} results={res} adjusted={changed.length > 0} />
-          : <Resident />}
+          ? <Brief inputs={changed.length ? adjustedInputs(data.inputs, controls) : data.inputs} base={data.inputs} results={res} adjusted={changed.length > 0} />
+          : route === "after" ? <After /> : <ResidentApp onTestInPlanner={testInPlanner} demoRole={demo !== null ? "resident" : null} />}
         {step?.ui && <Spotlight items={step.ui} />}
         {demoBar}
         {about && <About inputs={data.inputs} results={res} close={() => setAbout(false)} />}
@@ -279,7 +319,7 @@ export default function App() {
             <Township results={res} scenario={scenario} basis={basis} storm={storm} controls={controls} trees={data.trees.trees} pick={pick}
               layers={layers} onPick={setPick} onReady={setAnchors} onHover={setHover} onShown={() => setShown(true)} />
             {anchors && labelsOn && <Overlays anchors={anchors} council={data.overlays.council_line.paths as any} results={res} scenario={scenario} basis={basis}
-              controls={controls} storm={storm} layers={layers} pickZone={(id) => setPick({ kind: "zone", id })} />}
+              controls={controls} storm={storm} layers={layers} pickZone={(id) => setPick({ kind: "zone", id })} reports={reportPins} />}
             {anchors && points.length > 0 && <Pointers items={points} anchors={anchors} />}
           </Suspense>
           <Rain strength={storm * rainK} />

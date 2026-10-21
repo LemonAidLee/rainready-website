@@ -120,6 +120,7 @@
    },
    "trunk_drain": {
     "capacity_m3_s": 19.500392916597253,
+    "blockage": 0.0,
     "direct_demand_m3_s": 19.60459905269741,
     "spare_for_ponds_m3_s": 0.0,
     "pond_release_share": 0.0,
@@ -295,6 +296,7 @@
    },
    "trunk_drain": {
     "capacity_m3_s": 19.500392916597253,
+    "blockage": 0.0,
     "direct_demand_m3_s": 21.562458116355003,
     "spare_for_ponds_m3_s": 0.0,
     "pond_release_share": 0.0,
@@ -470,6 +472,7 @@
    },
    "trunk_drain": {
     "capacity_m3_s": 19.500392916597253,
+    "blockage": 0.0,
     "direct_demand_m3_s": 21.562458116355003,
     "spare_for_ponds_m3_s": 0.0,
     "pond_release_share": 0.0,

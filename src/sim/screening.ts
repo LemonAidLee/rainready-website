@@ -49,6 +49,12 @@ export function manningTrapezoid(section: any): number {
   return (area * r ** (2.0 / 3.0) * Math.sqrt(val(section.slope))) / val(section.manning_n);
 }
 
+/** Full-bank capacity less the share lost to silt and rubbish (planner input "blockage", 0 if absent, capped 0.9). */
+export function trunkCapacity(trunk: any): [number, number] {
+  const lost = Math.min(0.9, Math.max(0.0, val(trunk.blockage ?? 0.0) || 0.0));
+  return [manningTrapezoid(trunk.section) * (1.0 - lost), lost];
+}
+
 export function bandOf(ratio: number | null, mediumFrom: number, highFrom: number): Band {
   if (ratio === null) return "unknown";
   return ratio >= highFrom ? "high" : ratio >= mediumFrom ? "medium" : "low";
@@ -102,7 +108,7 @@ export function runDuration(inp: Inputs, ckey: string, withPond: boolean, dHours
     }
   }
 
-  const trunkCap = manningTrapezoid(inp.trunk_drain.section);
+  const [trunkCap, blockage] = trunkCapacity(inp.trunk_drain);
   const direct =
     sum(Object.entries(zones).filter(([, d]) => d.drains_to === "trunk_drain").map(([z]) => passed[z][0])) +
     sum(Object.values(ext).filter((e: any) => e.drains_to === "trunk_drain").map((e: any) => e.q_m3_s));
@@ -124,7 +130,7 @@ export function runDuration(inp: Inputs, ckey: string, withPond: boolean, dHours
     ponds[pid] = { inflow_m3: vIn, allowed_release_m3_s: allowed[pid], release_m3_s: qRel, released_m3: vRel,
                    storage_required_m3: need, capacity_m3: cap, gap_m3: cap ? need - cap : null, ratio: cap ? need / cap : null };
   }
-  const trunk: any = { capacity_m3_s: trunkCap, direct_demand_m3_s: direct, spare_for_ponds_m3_s: spare,
+  const trunk: any = { capacity_m3_s: trunkCap, blockage, direct_demand_m3_s: direct, spare_for_ponds_m3_s: spare,
                        pond_release_share: share, ratio: direct / trunkCap };
   return { duration_h: dHours, intensity_mm_hr: i, intensity_tc_mm_hr: iTc, zones, external: ext, ponds,
            trunk_drain: trunk, what_if_pond: neu } as any;
@@ -195,7 +201,8 @@ export function checkAreas(inp: Inputs, drawn?: Record<string, number>): string[
 
 export function run(inp: Inputs, drawnAreas?: Record<string, number>) {
   const ph = placeholders(inp);
-  const now = runScenario(inp, "now");
+  const fixed = val(inp.storm.design_duration_h);
+  const now = runScenario(inp, "now", (val(inp.storm.durations_h) as number[]).includes(fixed) ? fixed : null);
   const scenarios: Record<string, any> = {};
   for (const n of Object.keys(inp.scenarios)) scenarios[n] = n === "now" ? now : runScenario(inp, n, now.duration_h);
   addBands(inp, scenarios);

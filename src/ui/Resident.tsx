@@ -32,7 +32,7 @@ function Chat() {
   );
 }
 
-function MoveNow() {
+export function MoveNow() {
   const [done, setDone] = useState<number[]>([]);
   const items = ["Move the car to the example higher-ground spot", "Lift valuables and documents off the floor", "Switch off the mains if water may enter", "Check on neighbours who may need help"];
   return (

@@ -1,8 +1,10 @@
 // Planner view panels: the live results panel, the zone / pond inspector card, the band legend and the About drawer.
 import { Droplet, X } from "lucide-react";
 import type { ReactNode } from "react";
-import { ASSUMED_CAP, BAND_COLOR, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
+import { BAND_COLOR, roomOf, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
+import { recordOf, streetDrainsOf } from "../lib/evidence";
 import { change, drainsTo, m3, num } from "../lib/format";
+import { AssumptionChecks, GroundChecks } from "./Evidence";
 import type { Pick } from "../scene/Township";
 
 function Delta({ r }: { r: number | null | undefined }) {
@@ -22,8 +24,9 @@ function Bar({ v, max, mark, color }: { v: number; max: number; mark?: number; c
 
 export function Results(p: { res: any; base: any; scenario: ScenarioId; name: string; c: Controls; storm: number; basis: Basis }) {
   const sc = p.res.scenarios[p.scenario], now = p.res.scenarios.now;
-  // the capacity a pond is measured against: the entered one, else (when colouring against capacity) the assumed one
-  const capOf = (id: string) => sc.ponds[id].capacity_m3 ?? (p.basis === "capacity" ? ASSUMED_CAP[id] : null);
+  // the capacity a pond is measured against: the entered one, else (when colouring against capacity) the assumed one,
+  // less the share the planner says is lost to silt
+  const capOf = (id: string) => (sc.ponds[id].capacity_m3 !== null || p.basis === "capacity" ? roomOf(sc.ponds[id], id, p.c.silt) : null);
   const top = Math.max(...["pond_A", "pond_B"].flatMap((id) => [sc.ponds[id].storage_required_m3, now.ponds[id].storage_required_m3, capOf(id) ?? 0]));
   const noRoom = sc.trunk_drain.pond_release_share === 0;
   const pond = (id: "pond_A" | "pond_B") => {
@@ -36,7 +39,7 @@ export function Results(p: { res: any; base: any; scenario: ScenarioId; name: st
         <Bar v={q.storage_required_m3} max={top * 1.08} mark={cap ?? now.ponds[id].storage_required_m3}
           color={over ? BAND_COLOR.high : "#3aa0ff"} />
         <div className="res-sub">{cap
-          ? <>{over ? "Over" : "Within"} the {q.capacity_m3 ? "entered" : "assumed (L)"} capacity {m3(cap)} · {gap > 0 ? "short" : "spare"} {m3(Math.abs(gap))}{noRoom && q.released_m3 < 1 && " · releases nothing: the shared drain has no room"}</>
+          ? <>{over ? "Over" : "Within"} the {q.capacity_m3 ? "entered" : "assumed (L)"} capacity{p.c.silt > 0 && `, ${Math.round(p.c.silt * 100)} % silted,`} {m3(cap)} · {gap > 0 ? "short" : "spare"} {m3(Math.abs(gap))}{noRoom && q.released_m3 < 1 && " · releases nothing: the shared drain has no room"}</>
           : q.released_m3 < 1 && noRoom
             ? <>Marker = today · releases nothing: the shared drain has no room, so upstream change can't move this</>
             : <>Marker = today · releases {q.released_m3 < 1 ? "nothing" : m3(q.released_m3)} during the storm</>}</div>
@@ -56,11 +59,11 @@ export function Results(p: { res: any; base: any; scenario: ScenarioId; name: st
         <div className="res-k">SHARED TRUNK DRAIN · LOAD</div>
         <div className="res-v"><b style={{ color: tc }}>{Math.round(t.ratio * 100)} %</b><Delta r={t.change_vs_now} /></div>
         <Bar v={t.direct_demand_m3_s} max={Math.max(t.capacity_m3_s, t.direct_demand_m3_s) * 1.15} mark={t.capacity_m3_s} color={tc} />
-        <div className="res-sub">{num(t.direct_demand_m3_s, 1)} of {num(t.capacity_m3_s, 1)} m³/s · marker = assumed capacity</div>
+        <div className="res-sub">{num(t.direct_demand_m3_s, 1)} of {num(t.capacity_m3_s, 1)} m³/s · marker = assumed capacity{t.blockage > 0 && `, ${Math.round(t.blockage * 100)} % blocked`}</div>
       </div>
       {sc.what_if_pond && (
         <div className="res-row" data-spot="res-whatif">
-          <div className="res-k">WHAT-IF POND</div>
+          <div className="res-k">NEW RETROFIT POND (WHAT-IF)</div>
           <div className="res-v"><b>{m3(Math.min(sc.what_if_pond.storage_required_m3, sc.what_if_pond.capacity_m3 ?? Infinity))}</b><span className="delta down">held</span></div>
           <div className="res-sub">of {m3(sc.what_if_pond.capacity_m3)} · catches zone Z06 before pond A</div>
         </div>
@@ -105,6 +108,9 @@ export function Card(p: { pick: Pick; results: any; inputs: any; routes: Record<
           <Row k="Area">{num(zi.area_ha.value, 1)} ha</Row>
           <Row k="Runoff C">{num(zi.c_now.value, 2)} today <span className="conf">{zi.c_now.confidence}</span></Row>
           <Row k="Drains to">{drainsTo(z.drains_to)}</Row>
+          {recordOf(z.drains_to) && <Row k="Maintained by">{recordOf(z.drains_to)!.short} <span className="conf" title={recordOf(z.drains_to)!.rule}>{recordOf(z.drains_to)!.conf}</span>
+            {recordOf(z.drains_to)!.conf === "L" && <><br /><small>{recordOf(z.drains_to)!.who}</small></>}</Row>}
+          <Row k="Street drains">{streetDrainsOf(zi.council)} <span className="conf" title="Secondary and tertiary drains: the council's (state cabinet, MMKN 17/2025)">M</span><br /><a className="card-link" href="#/after">After a flood: who helps, who pays →</a></Row>
           <Row k="Peak flow">{num(z.q_m3_s, 1)} m³/s ({sc.duration_h}-h storm)</Row>
           {pond && <Row k={`${z.drains_to === "pond_A" ? "Pond A" : "Pond B"} must hold`}>{m3(pond.storage_required_m3)} ({change(pond.change_vs_now)} vs today)</Row>}
           {z.drains_to === "trunk_drain" && <Row k="Trunk drain">{num(sc.trunk_drain.direct_demand_m3_s, 1)} of {num(sc.trunk_drain.capacity_m3_s, 1)} m³/s ({change(sc.trunk_drain.change_vs_now)} vs today)</Row>}
@@ -115,18 +121,19 @@ export function Card(p: { pick: Pick; results: any; inputs: any; routes: Record<
   }
   const id = p.pick.id;
   const pond = id === "pond_whatif" ? sc.what_if_pond : sc.ponds[id];
-  const name = id === "pond_whatif" ? "What-if pond" : id === "pond_A" ? "Pond A" : "Pond B";
+  const name = id === "pond_whatif" ? "New pond (what-if)" : id === "pond_A" ? "Pond A" : "Pond B";
   return (
     <aside className="panel card" data-spot="card">
       <div className="panel-head"><span><Droplet size={12} style={{ verticalAlign: -1 }} /> {name.toUpperCase()}</span><button className="x" onClick={p.close} aria-label="Close"><X size={14} /></button></div>
-      <div className="sub">{id === "pond_whatif" ? "Invented what-if on OSM brownfield land in Z06, not a proposal" : "Mapped retention pond (OpenStreetMap), Klang council side"}</div>
-      {!pond ? <p className="note">Switch on the what-if pond in Scenario control.</p> : <>
+      <div className="sub">{id === "pond_whatif" ? "A retrofit what-if on OSM brownfield land in Z06: a test, not a proposal" : "Mapped retention pond (OpenStreetMap), Klang council side"}</div>
+      {!pond ? <p className="note">Switch on the new retrofit pond in Scenario control.</p> : <>
         <div className="sub" style={{ margin: "8px 0 0" }}>Storage required in the {sc.duration_h}-hour design storm</div>
         <div className="big">{m3(pond.storage_required_m3)}</div>
         <dl>
           {"change_vs_now" in pond && <Row k="Vs today">{change(pond.change_vs_now)}</Row>}
           <Row k="Inflow">{m3(pond.inflow_m3)}</Row>
           <Row k="Released">{m3(pond.released_m3)}{"allowed_release_m3_s" in pond && ` (allowed ${num(pond.allowed_release_m3_s, 1)} m³/s, got ${num(pond.release_m3_s, 1)})`}</Row>
+          {recordOf(id) && <Row k="Maintained by">{recordOf(id)!.short} <span className="conf">{recordOf(id)!.conf}</span><br /><small>{recordOf(id)!.who}. {recordOf(id)!.rule}</small><br /><a className="card-link" href="#/after">After a flood: who helps, who pays →</a></Row>}
           <Row k="Stated capacity">{pond.capacity_m3 ? m3(pond.capacity_m3) : "not public: enter it in Scenario control"}</Row>
           {pond.gap_m3 !== null && pond.gap_m3 !== undefined && <Row k={pond.gap_m3 > 0 ? "Shortfall" : "To spare"}>{m3(Math.abs(pond.gap_m3))}</Row>}
         </dl>
@@ -159,9 +166,15 @@ export function About(p: { inputs: any; results: any; close: () => void }) {
           <li>Peak flow per zone by the Rational Method, Q = C·i·A/360 (Eq. 2.3); C from Table 2.5, area-weighted over each zone's land cover. All zones are under the method's 80 ha limit.</li>
           <li>Runoff volume = Q × duration (Rational Hydrograph Method, 2.3.2).</li>
           <li>Ponds may release at most the pre-development peak flow (MSMA 1.2.1, Qpost ≤ Qpre; former oil palm, C 0.40), and only what the shared trunk drain still has room for (Manning, assumed section).</li>
-          <li>Storage required = inflow − release. Stated pond capacities are not public, so they are a planner input. Until one is entered, the map's <b>Storage shortfall</b> colours measure each zone against an assumed capacity (mapped water area × 1.5 m of live storage, confidence L) or, for zones on the trunk drain, against its assumed conveyance: red is "not enough room" for the water in the design storm, not a flood depth. In a scenario, zone tags also show <b>▲ / ▼</b>: how much the load on the zone's pond or drain changed from today. There is one colour scale only.</li>
+          <li>Storage required = inflow − release. Stated pond capacities are not public, so they are a planner input. Until one is entered, the map's <b>Storage shortfall</b> colours measure each zone against an assumed capacity (mapped water area × 1.5 m of live storage, inside MSMA 2's 1–3 m planning range; see the checks below) or, for zones on the trunk drain, against its assumed conveyance: red is "not enough room" for the water in the design storm, not a flood depth. In a scenario, zone tags also show <b>▲ / ▼</b>: how much the load on the zone's pond or drain changed from today. There is one colour scale only.</li>
         </ol>
-        <h3>Independent cross-check</h3>
+        <h3>Checked against the ground</h3>
+        <p>Where the screening agrees with independent evidence, and where it does not.</p>
+        <GroundChecks />
+        <h3>The two assumptions it rests on</h3>
+        <AssumptionChecks />
+        <p style={{ marginTop: 10 }}>Details, imagery and the MSMA 2 Chapter 7 references: research/HY_ASSUMPTIONS_CHECK.md.</p>
+        <h3>About the FastFlood run</h3>
         <p>A teammate ran FastFlood (Fast Hazard B.V., v1.0.20; Copernicus GLO-30 at 20 m, ESA WorldCover, GPM IMERG design rain) over the same area for a 100-year storm. It shows water collecting in ponds A and B and along the east–west drain corridors, as our zones assume, and an effective runoff coefficient of 0.78–0.79 against our 0.63–0.78. We do not show its depth map: terrain error here is about 1 m. See research/FASTFLOOD_CROSSCHECK.md.</p>
         <h3>Every input</h3>
         <table className="t">

@@ -68,6 +68,13 @@
       "source": "MSMA 2.2.1: examine a range of storm durations; storm duration >= tc (MSMA 2.2.2). The critical one (most storage) is reported",
       "confidence": "M"
     },
+    "design_duration_h": {
+      "value": null,
+      "unit": "h",
+      "status": "planner input",
+      "source": "Empty: the design storm is today's critical duration. Set to one of durations_h to hold the storm fixed, e.g. so a blocked drain is compared with the clean drain under the same storm",
+      "confidence": "-"
+    },
     "tc_hours": {
       "value": 0.5,
       "unit": "h",
@@ -523,6 +530,13 @@
         "source": "Regional ground fall 1.3 m/km (AR1 plane fit to GLO-30 over 18 km2, M); drain gradients inside the block cannot be read from the DEM",
         "confidence": "L"
       }
+    },
+    "blockage": {
+      "value": 0.0,
+      "unit": "fraction",
+      "status": "planner input",
+      "source": "Share of the drain's carrying capacity lost to silt and rubbish (0 = clean, as designed). Not measured anywhere public; a maintenance what-if. Screening simplification: capacity scales by (1 - blockage); capped at 0.9",
+      "confidence": "-"
     },
     "_limit": "Only this drain is counted as conveyance; overland and road (major-system) flow paths are not, so storage required is an upper-end screening figure"
   },

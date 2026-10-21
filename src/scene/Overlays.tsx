@@ -10,6 +10,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import { BAND_COLOR, changeTag, zoneChange, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
+import { JPS_RECORDS, toModel } from "../lib/evidence";
 import { m3 } from "../lib/format";
 import type { Anchors, Layers, V3 } from "./Township";
 
@@ -130,6 +131,7 @@ const loadColor = (r: number) => (r >= 1 ? BAND_COLOR.high : r >= 0.8 ? BAND_COL
 export function Overlays(p: {
   anchors: Anchors; council: XY[][]; results: any; scenario: ScenarioId; basis: Basis; controls: Controls; storm: number;
   layers: Layers; pickZone: (id: string) => void;
+  reports?: { id: string; issue: string; status: string; label: string; lat: number; lon: number; sample: boolean }[];
 }) {
   const ground = useMemo(() => groundFn(p.anchors.zones), [p.anchors]);
   // level of detail: at overview zoom only areas, spots and ponds are labelled; zones, drain and council tags join
@@ -227,7 +229,8 @@ export function Overlays(p: {
   const extCentre: V3 = [ox + side / 2, baseH + 30, -(oy + side / 2)];
   const bandOf = (id: string) => zoneLook(sc.zones[id], p.scenario, sc, p.basis).band;
   const ponds = sc.ponds;
-  const html = { zIndexRange: [4, 2] as [number, number], center: true };
+  // labels never swallow clicks (their wrappers overlap zone tags); clickable tags opt back in (.tag-zone)
+  const html = { zIndexRange: [4, 2] as [number, number], center: true, wrapperClass: "html-pass" };
 
   return (
     <group>
@@ -262,10 +265,33 @@ export function Overlays(p: {
             <div className={`tag tag-spot ${i === 1 ? "" : "req"}`} style={{ ["--ax" as any]: SPOT_AX[i], ["--lift" as any]: SPOT_LIFT[i] }}><i />
               <b>SPOT {i}</b><span>{SPOT_NOTE[i]}</span></div></Html>
         ))}
+        {/* official flood records (JPS Selangor GIS) at their recorded positions: the screening's check on the ground */}
+        {JPS_RECORDS.map((r) => {
+          const [x, y] = toModel(r.lat, r.lon);
+          return (
+            <Html key={r.name} position={gl(x, ground(x, y) + 14, y).toArray()} {...html}>
+              <div className="tag tag-record" title={`${r.kind} recorded by JPS Selangor: ${r.name}`}>
+                <i /><b>JPS RECORD</b><span>{r.kind} · {r.years}</span></div></Html>
+          );
+        })}
+        {/* resident reports from the resident door (resident/store.ts), at their pin; a tap opens the report there */}
+        {p.layers.reports && (p.reports ?? []).map((r) => {
+          const [x, y] = toModel(r.lat, r.lon);
+          if (x < -1222 || x > 1700 || y < -830 || y > 608) return null;
+          return (
+            <Html key={r.id} position={gl(x, ground(x, y) + 12, y).toArray()} center zIndexRange={[3, 1]} wrapperClass="html-pass">
+              <button className={`tag tag-report st-${r.status}`} title={`${r.issue} · ${r.label}${r.sample ? " · demo sample" : ""}. Open the report`}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); location.hash = `#/resident?report=${encodeURIComponent(r.id)}`; }}>
+                <i /><b>{r.sample ? "SAMPLE REPORT" : "REPORT"}</b><span>{r.issue}</span></button></Html>
+          );
+        })}
+        {/* zone tags stop their clicks: the canvas would read them as a click on empty ground and clear the pick */}
         {(detail || p.storm > 0.5) && Object.keys(sc.zones).map((id) => pos(`label_zone_${id}`) && (
-          <Html key={id} position={pos(`label_zone_${id}`)!} center zIndexRange={[1, 0]}>
+          <Html key={id} position={pos(`label_zone_${id}`)!} center zIndexRange={[1, 0]} wrapperClass="html-pass">
             <button className="tag tag-zone" style={{ ["--b" as any]: BAND_COLOR[p.storm > 0.5 ? bandOf(id) : "base"] }}
-              onClick={() => p.pickZone(id)}>{id}{(() => { const c = changeTag(zoneChange(sc.zones[id], sc)); return c && <em>{c}</em>; })()}</button></Html>
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); p.pickZone(id); }}>{id}{(() => { const c = changeTag(zoneChange(sc.zones[id], sc)); return c && <em>{c}</em>; })()}</button></Html>
         ))}
         {(["pond_A", "pond_B"] as const).map((id) => p.anchors.ponds[id] && (
           <Html key={id} position={[p.anchors.ponds[id][0], p.anchors.ponds[id][1] + 26, p.anchors.ponds[id][2]]} {...html}>
@@ -274,7 +300,7 @@ export function Overlays(p: {
         ))}
         {p.controls.pond && p.anchors.ponds.pond_whatif && (
           <Html position={[p.anchors.ponds.pond_whatif[0], p.anchors.ponds.pond_whatif[1] + 30, p.anchors.ponds.pond_whatif[2]]} {...html}>
-            <div className="tag tag-pond whatif"><b>WHAT-IF POND</b><span>{m3(p.controls.pondSize)} · invented</span></div></Html>
+            <div className="tag tag-pond whatif"><b>NEW POND</b><span>{m3(p.controls.pondSize)} · what-if</span></div></Html>
         )}
         {detail && <Html position={gl(trunkMid[0], ground(trunkMid[0], trunkMid[1]) + 18, trunkMid[1]).toArray()} {...html}>
           <div className="tag tag-drain" style={{ ["--b" as any]: p.storm > 0.5 ? loadColor(ratio) : "#35d0e6" }}>

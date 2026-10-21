@@ -219,7 +219,7 @@ function prepare(root: THREE.Object3D, trees: [number, number, number, number, s
 
 const lerp = THREE.MathUtils.lerp;
 
-export interface Layers { zones: boolean; labels: boolean; flow: boolean; boundary: boolean; trees: boolean; upstream: boolean }
+export interface Layers { zones: boolean; labels: boolean; flow: boolean; boundary: boolean; trees: boolean; upstream: boolean; reports: boolean }
 
 export function Township(props: {
   results: any; scenario: ScenarioId; basis: Basis; storm: number; controls: Controls; trees: [number, number, number, number, string][];

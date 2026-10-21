@@ -1,5 +1,5 @@
 // The console frame around the 3D view: status bar (top), icon rail (left), evidence ticker and cursor readout (bottom).
-import { FileText, Globe2, Info, Layers as LayersIcon, Map, PlayCircle, SlidersHorizontal, Users } from "lucide-react";
+import { FileText, Globe2, Info, Layers as LayersIcon, LifeBuoy, Map, PlayCircle, SlidersHorizontal, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import type { Layers } from "../scene/Township";
 import { num } from "../lib/format";
@@ -58,11 +58,12 @@ export function Rail(p: { route: string; panel: Panel; setPanel: (x: Panel) => v
       <Item icon={<Map size={18} />} label="Planner" href="#/planner" on={planner && p.panel === null} />
       <Item icon={<SlidersHorizontal size={18} />} label="Scenario" on={planner && p.panel === "controls"}
         onClick={() => { if (!planner) location.hash = "#/planner"; p.setPanel(p.panel === "controls" ? null : "controls"); }} />
-      <Item icon={<LayersIcon size={18} />} label="Layers" on={planner && p.panel === "layers"}
+      <Item icon={<LayersIcon size={18} />} label="Layers" on={planner && p.panel === "layers"} spot="rail-layers"
         onClick={() => { if (!planner) location.hash = "#/planner"; p.setPanel(p.panel === "layers" ? null : "layers"); }} />
       <div className="rail-sep" />
-      <Item icon={<FileText size={18} />} label="Brief" href="#/brief" on={p.route === "brief"} spot="rail-brief" />
+      <Item icon={<FileText size={18} />} label="Findings" href="#/brief" on={p.route === "brief"} spot="rail-brief" />
       <Item icon={<Users size={18} />} label="Residents" href="#/resident" on={p.route === "resident"} />
+      <Item icon={<LifeBuoy size={18} />} label="Recovery" href="#/after" on={p.route === "after"} spot="rail-after" />
       <div className="rail-grow" />
       <Item icon={<PlayCircle size={18} />} label="Demo" onClick={p.onDemo} />
       <Item icon={<Info size={18} />} label="About" onClick={p.onAbout} />
@@ -76,8 +77,9 @@ export function LayersPanel({ layers, set, close }: { layers: Layers; set: (l: L
     ["labels", "Labels", "Areas, spots, zones, ponds, drain"],
     ["flow", "Flow arrows", "Mapped drain directions (OSM)"],
     ["boundary", "Council boundary", "Klang / Shah Alam line (OSM, not cadastral)"],
-    ["upstream", "Upstream development", "Area A blocks and the area beyond the edge"],
+    ["upstream", "Next parcels upstream", "Area A blocks and the area beyond the edge"],
     ["trees", "Trees", "Invented street and park trees"],
+    ["reports", "Resident reports", "Open reports from the resident door, at their pin"],
   ];
   return (
     <aside className="panel panel-left layers">

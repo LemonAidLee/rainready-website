@@ -36,7 +36,10 @@ export async function loadAll(): Promise<Loaded> {
  * with today's land cover under the same storm and drain.
  *   dev       upstream development, 0 = today's land cover ... 1 = the full upstream change in inputs.json
  *             (Z01 aprons paved, EXT_A built out at its c_upstream). Values in between interpolate C linearly.
- *   pond      the what-if pond on or off, and its size
+ *   pond      the what-if pond on or off, and its size (a new retrofit pond, the kind of work already funded nearby)
+ *   silt      share of each pond's live storage lost to silt, weeds or a blocked outlet (applied to the capacity the
+ *             ponds are measured against here; screening.ts does not use it)
+ *   blocked   share of the shared drain's carrying capacity lost to silt and rubbish (inputs trunk_drain.blockage)
  */
 export interface Controls {
   dev: number;
@@ -48,6 +51,8 @@ export interface Controls {
   ari: number;                // years, 2..100 (MSMA 2 IDF validity)
   capA: number | null;        // stated capacity of pond A, m3 (planner input)
   capB: number | null;
+  silt: number;               // 0..0.5, pond storage lost (upkeep)
+  blocked: number;            // 0..0.6, shared drain blocked (upkeep)
 }
 
 export function sourcedControls(inp: any): Controls {
@@ -59,6 +64,7 @@ export function sourcedControls(inp: any): Controls {
     drainTopWidth: inp.trunk_drain.section.top_width_m.value,
     ari: inp.storm.ari_years.value,
     capA: inp.ponds.pond_A.capacity_m3.value, capB: inp.ponds.pond_B.capacity_m3.value,
+    silt: 0, blocked: inp.trunk_drain.blockage?.value ?? 0,
   };
 }
 
@@ -72,6 +78,8 @@ export function changedInputs(c: Controls, inp: any): string[] {
   if (c.drainTopWidth !== s.drainTopWidth) out.push("drain size");
   if (c.ari !== s.ari) out.push("storm");
   if (c.capA !== s.capA || c.capB !== s.capB) out.push("pond capacity");
+  if (c.silt !== s.silt) out.push("pond upkeep");
+  if (c.blocked !== s.blocked) out.push("drain upkeep");
   return out;
 }
 
@@ -103,7 +111,21 @@ export function adjustedInputs(base: any, c: Controls) {
   if (c.pondSize !== s.pondSize) inp.what_if_pond.capacity_m3.value = c.pondSize;
   inp.ponds.pond_A.capacity_m3.value = c.capA;
   inp.ponds.pond_B.capacity_m3.value = c.capB;
+  if (c.blocked !== s.blocked) {
+    Object.assign(inp.trunk_drain.blockage, { value: c.blocked, status: "planner input" });
+    // upkeep does not change the storm: hold it at the clean drain's critical duration, so a blocked drain is compared
+    // with a clean one under the same storm (left free, a blocked drain can shift the critical duration and seem to
+    // carry less)
+    const clean = JSON.parse(JSON.stringify(inp));
+    clean.trunk_drain.blockage.value = s.blocked;
+    Object.assign(inp.storm.design_duration_h, { value: run(clean).scenarios.now.duration_h, status: "planner input" });
+  }
   return inp;
+}
+
+/** The storage a pond is measured against: its entered capacity, else the assumed one, less the share lost to silt. */
+export function roomOf(p: any, id: string, silt: number): number {
+  return (p.capacity_m3 ?? ASSUMED_CAP[id]) * (1 - silt);
 }
 
 /** The scenario that shows these settings: always compared with "now" in the same run. */
@@ -116,22 +138,28 @@ export function results(d: Loaded, c: Controls) {
   const sourced = changedInputs(c, d.inputs).length === 0 && !(c.pond && c.dev === 0);
   const r = sourced ? d.outputs : run(adjustedInputs(d.inputs, c), d.zonesDrawn);
   // mark the zones the what-if pond catches: against capacity, they are measured against that pond (zoneLook)
-  for (const sc of Object.values<any>(r.scenarios))
+  for (const sc of Object.values<any>(r.scenarios)) {
     if (sc.what_if_pond) for (const s of d.inputs.what_if_pond.serves) sc.zones[s].via_whatif = true;
+    for (const [id, p] of Object.entries<any>(sc.ponds)) p.room_m3 = roomOf(p, id, c.silt);
+  }
+  r.storage_lost = c.silt;
   return r;
 }
 
 export function scenarioName(c: Controls): string {
-  const up = c.dev === 0 ? "Today's land cover" : c.dev === 1 ? "Upstream built out" : `Upstream ${Math.round(c.dev * 100)} % built out`;
-  return c.pond ? `${up} + what-if pond` : up;
+  const up = c.dev === 0 ? "Today's land cover" : c.dev === 1 ? "Next parcels built out" : `Next parcels ${Math.round(c.dev * 100)} % built`;
+  const upkeep = [c.silt > 0 && `ponds ${Math.round(c.silt * 100)} % silted`, c.blocked > 0 && `drain ${Math.round(c.blocked * 100)} % blocked`].filter(Boolean);
+  return `${up}${c.pond ? " + new pond" : ""}${upkeep.length ? ` · ${upkeep.join(", ")}` : ""}`;
 }
 
 // ---- presets: each is a full set of controls, starting from the sourced values, and the colour view that tells
-// its story. Three groups, read in order: the problem, what the upstream change does, and fixes to test. Each was
-// chosen (team leader, 21 Oct 2026) so that the map looks different from every other preset.
-export type PresetGroup = "problem" | "upstream" | "fixes";
+// its story. Four groups, read in order: the problem, the next parcels upstream, the fixes on the table, and keeping
+// what is built working. Each was chosen (team leader, 21 Oct 2026) so that the map looks different from every
+// other preset. The town is built: the levers stand for decisions still being made (retrofits, the parcels not yet
+// built, upkeep), not for redesigning it.
+export type PresetGroup = "problem" | "upstream" | "fixes" | "upkeep";
 export const PRESET_GROUPS: Record<PresetGroup, string> = {
-  problem: "The problem", upstream: "Across the council line", fixes: "Fixes to test",
+  problem: "The problem", upstream: "Next parcels upstream", fixes: "Fixes on the table", upkeep: "Keep it working",
 };
 export interface Preset {
   id: string; group: PresetGroup; label: string; blurb: string; show: Basis; wide?: boolean;   // show: the card's summary
@@ -143,17 +171,21 @@ export const PRESETS: Preset[] = [
     blurb: "100-year storm on today's land. Where is there not enough room?" },
   { id: "common", group: "problem", label: "A common heavy storm", show: "capacity", set: () => ({ ari: 2 }),
     blurb: "2-year storm (50 % chance each year). The shared drain fills first" },
-  { id: "builtout", group: "upstream", label: "Upstream builds out", show: "change", set: () => ({ dev: 1 }),
-    blurb: "Area A paved where peak control falls short" },
+  { id: "builtout", group: "upstream", label: "Next parcels build out", show: "change", set: () => ({ dev: 1 }),
+    blurb: "Open land left in Area A is built, where peak control falls short" },
   { id: "bigcatch", group: "upstream", label: "Larger upstream catchment", show: "change", set: () => ({ dev: 1, extArea: 200 }),
     blurb: "200 ha of Area A drains through the crossing" },
-  { id: "pond", group: "fixes", label: "Add a pond", show: "change", set: () => ({ pond: true, pondSize: 40000 }),
-    blurb: "40,000 m³ on vacant land in Z06, before pond A" },
+  { id: "pond", group: "fixes", label: "A new retrofit pond", show: "change", set: () => ({ pond: true, pondSize: 40000 }),
+    blurb: "40,000 m³ on vacant land in Z06, before pond A: the kind of pond being added nearby" },
   { id: "drain", group: "fixes", label: "Widen the shared drain", show: "capacity", set: () => ({ drainTopWidth: 10 }),
-    blurb: "10 m, like the main ditch: ponds can release" },
+    blurb: "Drain works to 10 m, like the main ditch: ponds can release" },
   { id: "together", group: "fixes", label: "Fix it together", show: "capacity", wide: true,
     set: () => ({ dev: 1, pond: true, pondSize: 40000, drainTopWidth: 10 }),
-    blurb: "Upstream built out. The pond alone or the 10 m drain alone leaves red; together they clear it" },
+    blurb: "Next parcels built. The pond alone or the 10 m drain alone leaves red; together they clear it" },
+  { id: "neglect", group: "upkeep", label: "Silted and blocked", show: "capacity", set: () => ({ ari: 2, silt: 0.3, blocked: 0.3 }),
+    blurb: "A common 2-year storm, ponds 30 % silted and the drain 30 % blocked" },
+  { id: "unkept", group: "upkeep", label: "Widened, then left to clog", show: "capacity", set: () => ({ drainTopWidth: 10, blocked: 0.3 }),
+    blurb: "The 10 m drain works, then 30 % blocked: the gain is lost" },
 ];
 
 /** One line for a preset's card, read from the same simulator: share of capacity, or change from today. */
@@ -161,7 +193,7 @@ export function presetSummary(d: Loaded, pr: Preset): string {
   const c = applyPreset(d.inputs, pr), sc = results(d, c).scenarios[scenarioOf(c)];
   const t = sc.trunk_drain, A = sc.ponds.pond_A, B = sc.ponds.pond_B;
   if (pr.show === "capacity") {
-    const full = (p: any, id: string) => `${Math.round((p.storage_required_m3 / (p.capacity_m3 ?? ASSUMED_CAP[id])) * 100)} %`;
+    const full = (p: any, id: string) => `${Math.round((p.storage_required_m3 / roomOf(p, id, c.silt)) * 100)} %`;
     return `A ${full(A, "pond_A")} · B ${full(B, "pond_B")} · drain ${Math.round(t.ratio * 100)} %`;
   }
   const chg = (r: number) => { const v = Math.round((r - 1) * 100); return v === 0 ? "±0" : `${v > 0 ? "+" : "−"}${Math.abs(v)} %`; };
@@ -206,10 +238,12 @@ export function capacityLoad(z: any, sc: any): { ratio: number; of: string } | n
   if (z.via_whatif && wp?.capacity_m3) return { ratio: wp.storage_required_m3 / wp.capacity_m3, of: "the what-if pond's size" };
   if (to in sc.ponds) {
     const p = sc.ponds[to], name = to === "pond_A" ? "pond A" : "pond B";
-    return { ratio: p.storage_required_m3 / (p.capacity_m3 ?? ASSUMED_CAP[to]),
-             of: `${name}'s ${p.capacity_m3 === null ? "assumed" : "entered"} capacity` };
+    const full = roomOf(p, to, 0), room = p.room_m3 ?? full;
+    return { ratio: p.storage_required_m3 / room,
+             of: `${name}'s ${p.capacity_m3 === null ? "assumed" : "entered"} capacity${room < full ? `, ${Math.round((1 - room / full) * 100)} % silted` : ""}` };
   }
-  if (to === "trunk_drain") return { ratio: sc.trunk_drain.ratio, of: "the trunk drain's assumed capacity" };
+  if (to === "trunk_drain") return { ratio: sc.trunk_drain.ratio,
+    of: `the trunk drain's assumed capacity${sc.trunk_drain.blockage ? `, ${Math.round(sc.trunk_drain.blockage * 100)} % blocked` : ""}` };
   return null;
 }
 
