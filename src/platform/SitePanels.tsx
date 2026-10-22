@@ -5,6 +5,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { ArrowLeft, Download, FileUp, Info, LayoutGrid, RotateCcw, Upload, X } from "lucide-react";
 import { val } from "../sim/network.ts";
+import { useSwipeToClose } from "../ui/useSwipeToClose";
 import { Wordmark } from "../ui/Shell";
 import {
   applyRegister, BAND_COLOR, fmt, geojsonRows, loadPack, metricsOf, parseCSV, pct, ROOM, runSafe,
@@ -185,6 +186,8 @@ export function UploadPanel({ pack, upload, setUpload, liveError }: { pack: Pack
 
 // ------------------------------------------------------------------------------------------------- the card
 export function Card({ pick, inputs, sc, close }: { pick: NonNullable<Pick>; inputs: any; sc: any; close: () => void }) {
+  const sheet = useRef<HTMLDivElement>(null);
+  useSwipeToClose(sheet, close, `${pick.kind}:${pick.id}`);   // phones: swipe the card down
   const V = ({ k, v }: { k: string; v: any }) => (
     <div className="pf-kv"><span>{k}</span><b>{v && typeof v === "object" && "value" in v
       ? `${typeof v.value === "number" ? fmt(v.value, v.value < 1 ? 4 : v.value < 100 ? 2 : 0) : v.value ?? "—"} ${(v.unit ?? "").replace("m3", "m³").replace(/^-$/, "")}` : v}</b>
@@ -224,7 +227,7 @@ export function Card({ pick, inputs, sc, close }: { pick: NonNullable<Pick>; inp
       <V k="Size" v={w.capacity_m3} /><V k="Serves" v={w.serves.join(", ")} /></>;
   }
   return (
-    <div className="panel pf-card">
+    <div ref={sheet} className="panel pf-card">
       <div className="panel-head"><span>{title}</span><button className="icon-btn" onClick={close} aria-label="Close"><X size={14} /></button></div>
       <div className="pf-card-sub">{sub}</div>
       <div className="pf-card-body">{body}</div>

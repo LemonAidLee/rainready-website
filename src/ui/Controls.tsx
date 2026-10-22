@@ -2,7 +2,8 @@
 // being made: the next parcels upstream, the fixes on the table (a retrofit pond, drain works) and upkeep. Every lever names what it changes in the model ("Watch"),
 // and each change re-runs screening.ts in the browser. Values that are not the sourced ones are flagged.
 import { Building2, CloudRain, Eye, Gauge, Info, RotateCcw, Waves, Wrench } from "lucide-react";
-import { Fragment, useMemo, type ReactNode } from "react";
+import { Fragment, useMemo, useRef, type ReactNode } from "react";
+import { useSwipeToClose } from "./useSwipeToClose";
 import { ASSUMED_CAP, PRESET_GROUPS, PRESETS, applyPreset, presetSummary, sourcedControls, type Basis, type Controls,
          type Loaded } from "../lib/data";
 import { num } from "../lib/format";
@@ -44,8 +45,10 @@ export function ControlPanel(p: { data: Loaded; inputs: any; c: Controls; set: (
   const s = sourcedControls(p.inputs), c = p.c;
   const summaries = useMemo(() => Object.fromEntries(PRESETS.map((pr) => [pr.id, presetSummary(p.data, pr)])), [p.data]);
   const set = (patch: Partial<Controls>) => { p.set({ ...c, ...patch }); p.setPreset(null); };
+  const sheet = useRef<HTMLElement>(null);
+  useSwipeToClose(sheet, p.close);                 // phones: swipe the sheet down to close it
   return (
-    <aside className="panel panel-left controls" data-spot="controls">
+    <aside ref={sheet} className="panel panel-left controls" data-spot="controls">
       <div className="panel-head"><span>SCENARIO CONTROL</span><button className="x" onClick={p.close} aria-label="Close">×</button></div>
 
       <div className="presets" data-spot="presets">

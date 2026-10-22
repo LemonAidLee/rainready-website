@@ -1,6 +1,7 @@
 // The console frame around the 3D view: status bar (top), icon rail (left), evidence ticker and cursor readout (bottom).
 import { FileText, Globe2, Info, Layers as LayersIcon, LifeBuoy, Map, PlayCircle, SlidersHorizontal, Users } from "lucide-react";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { useSwipeToClose } from "./useSwipeToClose";
 import type { Layers } from "../scene/Township";
 import { num } from "../lib/format";
 
@@ -77,6 +78,8 @@ export function Rail(p: { route: string; panel: Panel; setPanel: (x: Panel) => v
 }
 
 export function LayersPanel({ layers, set, close }: { layers: Layers; set: (l: Layers) => void; close: () => void }) {
+  const sheet = useRef<HTMLElement>(null);
+  useSwipeToClose(sheet, close);
   const rows: [keyof Layers, string, string][] = [
     ["zones", "Drainage zones", "Nine draft zones, coloured by band in the storm"],
     ["labels", "Labels", "Areas, spots, zones, ponds, drain"],
@@ -87,7 +90,7 @@ export function LayersPanel({ layers, set, close }: { layers: Layers; set: (l: L
     ["reports", "Resident reports", "Open reports from the resident door, at their pin"],
   ];
   return (
-    <aside className="panel panel-left layers">
+    <aside ref={sheet} className="panel panel-left layers">
       <div className="panel-head"><span>LAYERS</span><button className="x" onClick={close} aria-label="Close">×</button></div>
       {rows.map(([k, label, help]) => (
         <label key={k} className="layer-row">

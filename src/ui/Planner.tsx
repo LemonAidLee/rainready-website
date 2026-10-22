@@ -1,6 +1,7 @@
 // Planner view panels: the live results panel, the zone / pond inspector card, the band legend and the About drawer.
 import { Droplet, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import { useSwipeToClose } from "./useSwipeToClose";
 import { BAND_COLOR, roomOf, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
 import { recordOf, streetDrainsOf } from "../lib/evidence";
 import { change, drainsTo, m3, num } from "../lib/format";
@@ -97,13 +98,15 @@ function Row({ k, children }: { k: string; children: ReactNode }) {
 }
 
 export function Card(p: { pick: Pick; results: any; inputs: any; routes: Record<string, string>; scenario: ScenarioId; basis: Basis; close: () => void }) {
+  const sheet = useRef<HTMLElement>(null);
+  useSwipeToClose(sheet, p.close, p.pick ? `${p.pick.kind}:${p.pick.id}` : null);   // phones: swipe the card down
   if (!p.pick) return null;
   const sc = p.results.scenarios[p.scenario];
   if (p.pick.kind === "zone") {
     const z = sc.zones[p.pick.id], zi = p.inputs.zones[p.pick.id], look = zoneLook(z, p.scenario, sc, p.basis);
     const pond = sc.ponds[z.drains_to];
     return (
-      <aside className="panel card" data-spot="card">
+      <aside ref={sheet} className="panel card" data-spot="card">
         <div className="panel-head"><span>ZONE {p.pick.id}</span><button className="x" onClick={p.close} aria-label="Close"><X size={14} /></button></div>
         <h3>{zi.name}</h3>
         <div className="sub">{zi.council} council side · draft zone, not an official catchment</div>
@@ -127,7 +130,7 @@ export function Card(p: { pick: Pick; results: any; inputs: any; routes: Record<
   const pond = id === "pond_whatif" ? sc.what_if_pond : sc.ponds[id];
   const name = id === "pond_whatif" ? "New pond (what-if)" : id === "pond_A" ? "Pond A" : "Pond B";
   return (
-    <aside className="panel card" data-spot="card">
+    <aside ref={sheet} className="panel card" data-spot="card">
       <div className="panel-head"><span><Droplet size={12} style={{ verticalAlign: -1 }} /> {name.toUpperCase()}</span><button className="x" onClick={p.close} aria-label="Close"><X size={14} /></button></div>
       <div className="sub">{id === "pond_whatif" ? "A retrofit what-if on OSM brownfield land in Z06: a test, not a proposal" : "Mapped retention pond (OpenStreetMap), Klang council side"}</div>
       {!pond ? <p className="note">Switch on the new retrofit pond in Scenario control.</p> : <>

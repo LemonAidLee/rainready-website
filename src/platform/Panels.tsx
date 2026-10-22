@@ -1,6 +1,7 @@
 // The 2D site's frame (22 Oct 2026), panel for panel the 3D planner's: status bar, icon rail, Scenario control (presets
 // and levers, descriptions in hover tips), Layers, the site's own tabs, live results, footer readout and evidence feed.
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useRef, useState, type ReactNode } from "react";
+import { useSwipeToClose } from "../ui/useSwipeToClose";
 import { Building2, CloudRain, Eye, FileText, Gauge, Globe2, Info, LayoutGrid, Layers as LayersIcon, LifeBuoy, Map as MapIcon,
          PlayCircle, RotateCcw, SlidersHorizontal, Users, Waves, Wrench } from "lucide-react";
 import { val } from "../sim/network.ts";
@@ -104,11 +105,13 @@ export function ControlPanel2(p: { pack: Pack; inputs: any; c: C2; set: (c: C2) 
   const presets = PRESETS2.filter((pr) => !pr.needsPond || hasPond);
   const summaries = useMemo(() => Object.fromEntries(presets.map((pr) => [pr.id, presetSummary2(p.inputs, pr)])), [p.inputs]);
   const set = (patch: Partial<C2>) => { p.set({ ...c, ...patch }); p.setPreset(null); };
+  const sheet = useRef<HTMLElement>(null);
+  useSwipeToClose(sheet, p.close);
   const wp = p.inputs.what_if_ponds?.W1;
   // the ponds that matter most here: the fullest, for stated capacities
   const ponds = Object.entries<any>(p.sc.ponds).filter(([, q]) => q.storage_required_m3 > 0).sort((a, b) => (b[1].ratio ?? 0) - (a[1].ratio ?? 0)).slice(0, 5);
   return (
-    <aside className="panel panel-left controls" data-spot="controls">
+    <aside ref={sheet} className="panel panel-left controls" data-spot="controls">
       <div className="panel-head"><span>SCENARIO CONTROL</span><button className="x" onClick={p.close} aria-label="Close">×</button></div>
       <div className="presets" data-spot="presets">
         {presets.map((pr, i) => (
@@ -186,6 +189,8 @@ export function ControlPanel2(p: { pack: Pack; inputs: any; c: C2; set: (c: C2) 
 }
 
 export function LayersPanel2({ layers, set, close }: { layers: Layers2; set: (l: Layers2) => void; close: () => void }) {
+  const sheet = useRef<HTMLElement>(null);
+  useSwipeToClose(sheet, close);
   const rows: [keyof Layers2, string, string][] = [
     ["zones", "Drainage zones", "Generated zones, coloured by band in the storm"],
     ["labels", "Labels and gauges", "Zone tags with the change from today; pond fill gauges in the storm"],
@@ -196,7 +201,7 @@ export function LayersPanel2({ layers, set, close }: { layers: Layers2; set: (l:
     ["basemap", "Street map", "OpenStreetMap, dimmed"],
   ];
   return (
-    <aside className="panel panel-left layers">
+    <aside ref={sheet} className="panel panel-left layers">
       <div className="panel-head"><span>LAYERS</span><button className="x" onClick={close} aria-label="Close">×</button></div>
       {rows.map(([k, label, help]) => (
         <label key={k} className="layer-row">
@@ -211,8 +216,10 @@ export function LayersPanel2({ layers, set, close }: { layers: Layers2; set: (l:
 export function SiteInfoPanel(p: { pack: Pack; inputs: any; sc: any; tab: Tab2; setTab: (t: Tab2) => void; upload: UploadResult | null;
                                    setUpload: (u: UploadResult | null) => void; liveError: string | null; setPick: (x: Pick2) => void; close: () => void }) {
   const m = metricsOf(p.pack.site, p.inputs, p.sc);
+  const sheet = useRef<HTMLElement>(null);
+  useSwipeToClose(sheet, p.close);
   return (
-    <aside className="panel panel-left pf-info" data-spot="site-panel">
+    <aside ref={sheet} className="panel panel-left pf-info" data-spot="site-panel">
       <div className="panel-head"><span>SITE</span><button className="x" onClick={p.close} aria-label="Close">×</button></div>
       <div className="pf-tabs">
         {(["overview", "boundary", "inputs", "upload"] as Tab2[]).map((t) => (
