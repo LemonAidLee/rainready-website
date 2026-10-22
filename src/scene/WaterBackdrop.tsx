@@ -21,7 +21,10 @@ void main(){
   vec2 uv = gl_FragCoord.xy / uRes;
   float aspect = uRes.x / uRes.y;
   float d = 1.0 / (1.22 - uv.y);                       // distance into the scene grows toward the top
-  vec2 p = vec2((uv.x - 0.5) * aspect * d * 2.6, d * 3.2);
+  // a tall phone screen is a narrow slice of the water: each swell then spans the screen and reads as a smear, so
+  // portrait screens see a wider stretch of water and finer swells (wide screens are unchanged)
+  float zoom = aspect < 1.0 ? 1.8 : 1.0;
+  vec2 p = vec2((uv.x - 0.5) * max(aspect, 0.9) * d * 2.6, d * 3.2) * zoom;
   float e = 0.03 * d;
   float h = height(p, uTime);
   float hx = height(p + vec2(e, 0.0), uTime) - h, hy = height(p + vec2(0.0, e), uTime) - h;
@@ -74,6 +77,8 @@ export function startWater(canvas: HTMLCanvasElement, scale = 0.5): () => void {
 
 export function WaterBackdrop() {
   const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => (ref.current ? startWater(ref.current) : undefined), []);
+  // phones pack 2-3 device pixels into each CSS pixel: at the desktop's half resolution each water pixel became about
+  // six device pixels and the fine ripples broke into smeared bands, so phones render near their real resolution
+  useEffect(() => (ref.current ? startWater(ref.current, innerWidth < 860 ? Math.min(1, 0.6 * (devicePixelRatio || 1)) : 0.5) : undefined), []);
   return <canvas ref={ref} className="water" aria-hidden />;
 }
