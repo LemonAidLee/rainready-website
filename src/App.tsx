@@ -26,7 +26,7 @@ const TOP = [0.0, 1.0, 0.03];
 type View = "iso" | "top";
 const VIEW_ARC_MS = 1800;                                    // top <-> 3D camera swing
 
-function Camera({ focus, view, nonce, inset }: { focus: Focus | null; view: View; nonce: number; inset: [number, number] }) {
+function Camera({ focus, view, nonce, inset, phoneY = 0 }: { focus: Focus | null; view: View; nonce: number; inset: [number, number]; phoneY?: number }) {
   const { size, camera } = useThree();
   const controls = useRef<any>(null);
   // fit the model in the space left free by the side panels, and centre the view there
@@ -35,10 +35,11 @@ function Camera({ focus, view, nonce, inset }: { focus: Focus | null; view: View
   const zoom = size.width < 860 ? size.width / 3000 : Math.min(free / 3250, (size.height - 110) / 2050);
   useEffect(() => {
     const cam = camera as THREE.OrthographicCamera;
-    if (size.width < 860) cam.setViewOffset(size.width, size.height, 0, -Math.min(40, size.height * 0.05), size.width, size.height);   // phones: results fold to one line, so the model sits near the centre
+    // phones: the model sits in the space the screen leaves free (phoneY > 0 lifts it above a sheet, < 0 lowers it below the demo caption)
+    if (size.width < 860) cam.setViewOffset(size.width, size.height, 0, phoneY, size.width, size.height);
     else cam.setViewOffset(size.width, size.height, -(inset[0] - inset[1]) / 2, 0, size.width, size.height);
     cam.updateProjectionMatrix();
-  }, [camera, size.width, size.height, inset[0], inset[1]]);
+  }, [camera, size.width, size.height, inset[0], inset[1], phoneY]);
   const d = 4000;
   const dirOf = (v: number[]) => { const n = Math.hypot(v[0], v[1], v[2]); return new THREE.Vector3(v[0] / n, v[1] / n, v[2] / n); };
   const dir = useMemo(() => dirOf(view === "top" ? TOP : ISO), [view]);
@@ -302,6 +303,10 @@ export default function App() {
     );
   }
 
+  // phones: lift the model above an open sheet (Scenario, Layers, a card) so a lever's effect is seen as it moves;
+  // lower it below the demo caption, which sits at the top; otherwise just under the one-line results
+  const vh = innerHeight;
+  const phoneY = demo !== null ? (panel ? Math.round(vh * 0.03) : -Math.round(vh * 0.13)) : panel || pick ? Math.round(vh * 0.17) : -Math.min(40, Math.round(vh * 0.05));
   const rainK = THREE.MathUtils.clamp(sc.intensity_mm_hr / data.outputs.scenarios.now.intensity_mm_hr, 0.3, 1.3);
   const extra = extraPoints(anchors, controls);
   const points: PointAt[] = (step?.points ?? flash).map((p) => (typeof p.at === "string" && extra[p.at] ? { ...p, at: extra[p.at] } : p));
@@ -313,7 +318,7 @@ export default function App() {
           <hemisphereLight args={["#dfe8f5", "#1b2230", 0.85]} />
           <KeyLight />
           <directionalLight position={[1200, 500, 300]} intensity={0.4} color="#9fc3ff" />
-          <Camera focus={step && !step.route ? step.focus : null} view={view} nonce={nonce}
+          <Camera focus={step && !step.route ? step.focus : null} view={view} nonce={nonce} phoneY={phoneY}
             inset={[clean ? 0 : 60 + (panel ? 364 : 0), clean || (demo !== null && innerWidth < 1100) ? 0 : 342]} />
           <Suspense fallback={null}>
             <Township results={res} scenario={scenario} basis={basis} storm={storm} controls={controls} trees={data.trees.trees} pick={pick}

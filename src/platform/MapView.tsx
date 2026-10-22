@@ -63,6 +63,7 @@ export function MapView(p: {
   pack: Pack; inputs: any; sc: any; storm: number; layers: Layers2; pick: Pick2; setPick: (x: Pick2) => void;
   dev: number; pondOn: boolean; flash: Flash[]; focus: { b: L.LatLngBoundsExpression; n: number } | null; pins: Pin[];
   onZone: (id: string | null) => void; onMove: (ll: LL | null) => void; inset: [number, number];
+  lift?: number;               // phones: pixels to raise the map so it shows above an open sheet
 }) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -225,6 +226,15 @@ export function MapView(p: {
     G.flash.clearLayers();
     for (const f of p.flash) L.marker(f.at, { interactive: false, icon: L.divIcon({ className: "pf-ping", iconSize: [0, 0], html: `<i></i><span>${f.label}</span>` }) }).addTo(G.flash);
   }, [p.flash]);
+
+  // ---- phones: an open sheet raises the map, so a lever's effect stays in view
+  const lifted = useRef(0);
+  useEffect(() => {
+    const mp = map.current, want = p.lift ?? 0;
+    if (!mp || want === lifted.current) return;
+    mp.panBy([0, want - lifted.current], { animate: true, duration: 0.4 });
+    lifted.current = want;
+  }, [p.lift]);
 
   // ---- the guided tour moves the view
   useEffect(() => {

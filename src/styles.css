@@ -882,3 +882,32 @@ details.eng[open] summary svg { transform: rotate(180deg); }
   .pf2 .viewbar { bottom: 72px; }
   .pf-info .pf-tabs button { font-size: 10px; letter-spacing: 0.08em; }
 }
+
+/* ==== Phones, round 2 (team leader, 22 Oct 2026): see the township while it changes ==== */
+@media (max-width: 860px) {
+  /* guided demo: the caption sits at the top, in the empty sky, and stays short; the model moves below it (App phoneY) */
+  .demo, .in-demo .demo, .in-demo.has-panel .demo { top: calc(var(--top) + 6px); bottom: auto; left: 8px; right: 8px; width: auto; transform: none;
+    padding: 8px 12px 10px; }
+  .demo-top { gap: 8px; }
+  .demo-count { white-space: nowrap; letter-spacing: 0.12em; }
+  .demo-dots { gap: 3px; flex-wrap: nowrap; overflow: hidden; }
+  .demo-dots button { width: 7px; } .demo-dots button.on { width: 14px; }
+  .demo-title { margin-top: 6px; font-size: 15.5px; }
+  .demo-body { margin: 4px 0 8px; font-size: 12.5px; line-height: 1.45; max-height: 19vh; overflow-y: auto; }
+  .demo-legend-in { display: none; }
+  .demo-ctl { gap: 6px; }
+  .demo-ctl .btn-gold, .demo-ctl .btn { height: 32px; }
+  .demo-ctl .btn:not(.sq) { font-size: 0; gap: 0; width: 36px; padding: 0; justify-content: center; }   /* clean frame: icon only */
+
+  /* What-if and Layers: a shorter sheet, the one-line result stays on top, and the model sits between them */
+  .panel-left { max-height: 46vh; }
+  .has-panel .right-col { display: block; }
+  .has-panel .right-col .card, .has-panel .right-col .pf-card { display: none; }
+  .has-panel .results.open { max-height: 26vh; }
+  .hover-tip, .hover-tip.left { top: calc(var(--top) + 76px) !important; bottom: auto !important; }
+}
+@media (max-width: 860px) {
+  /* demo steps that open a sheet: caption on top, a short sheet below, the model in between (App phoneY) */
+  .in-demo .panel-left { max-height: 30vh; }
+  .in-demo .panel-left .presets { display: none; }
+}

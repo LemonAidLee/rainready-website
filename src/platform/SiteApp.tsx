@@ -162,7 +162,7 @@ export function SiteApp({ id, page, tourStart }: { id: string; page: "map" | "fi
     <div className={`app pf2 ${tour !== null ? "in-demo" : ""} ${clean ? "clean-frame" : ""} ${panel ? "has-panel" : ""} ${storm > 0.5 ? "stormy" : ""}`}>
       <MapView pack={pack} inputs={inputs} sc={sc} storm={storm} layers={layers} pick={pick} setPick={setPick} dev={c.dev}
         pondOn={c.pond && !!sc.what_if_ponds?.W1} flash={flash} focus={focus} pins={pins} onZone={setZone} onMove={setLl}
-        inset={[clean ? 0 : 60 + (panel ? 364 : 0), clean ? 0 : 342]} />
+        inset={[clean ? 0 : 60 + (panel ? 364 : 0), clean ? 0 : 342]} lift={innerWidth < 860 && panel ? Math.round(innerHeight * 0.2) : 0} />
       <Rain2D strength={storm * intensity} />
       <StatusBar2 pack={pack} sc={sc} c={c} name={name} status={status} storm={storm} onTour={startTour} onAbout={() => { setPanel("site"); setTab("inputs"); }} />
       {rail}
