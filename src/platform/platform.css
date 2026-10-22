@@ -1,0 +1,201 @@
+/* Platform pages (22 Oct 2026): the 2D site view and the portfolio. Same tokens as styles.css (the console look). */
+
+/* ---- 2D site view */
+.pf .pf-map { top: var(--top); bottom: 26px; background: #05090d; }
+.pf .footer { bottom: 0; }
+.pf .leaflet-container { background: #05090d; font-family: var(--sans); }
+.pf .leaflet-tooltip { background: var(--panel-solid); color: var(--text); border: 1px solid var(--line-2); border-radius: 3px; font-size: 11.5px; box-shadow: none; }
+.pf .leaflet-tooltip::before { display: none; }
+.pf .leaflet-bar a { background: var(--panel-solid); color: var(--text-2); border-color: var(--line); }
+.pf .leaflet-control-zoom { margin-bottom: 70px !important; margin-right: 400px !important; }
+.pf-cross span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--gold); color: #1a1405;
+  font: 700 12px/1 var(--mono); box-shadow: 0 0 0 3px rgba(227, 179, 65, 0.25); }
+.pf-back { display: inline-flex; align-items: center; gap: 5px; color: var(--text-2); text-decoration: none; }
+.pf-back:hover { color: var(--text); }
+
+.pf-panel { position: fixed; z-index: 8; top: calc(var(--top) + 10px); right: 10px; bottom: 36px; width: 380px; display: flex; flex-direction: column; overflow: hidden; }
+.pf-tabs { display: flex; border-bottom: 1px solid var(--line); }
+.pf-tabs button { flex: 1; height: 38px; border: 0; background: transparent; color: var(--text-3); font: 600 10.5px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; border-bottom: 2px solid transparent; }
+.pf-tabs button.on { color: var(--text); border-bottom-color: var(--gold); }
+.pf-tabs button:hover { color: var(--text); }
+.pf-body { overflow-y: auto; padding: 14px 16px 18px; font-size: 13px; line-height: 1.45; color: var(--text-2); }
+.pf-body h4 { margin: 18px 0 8px; font: 600 10.5px/1.3 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+.pf-lede { margin: 0 0 12px; color: var(--text); }
+.pf-note { margin: 10px 0 0; font-size: 11.5px; color: var(--text-3); }
+.pf-body code { font: 11.5px var(--mono); color: var(--cyan); }
+.pf-warn { display: flex; gap: 8px; align-items: flex-start; padding: 9px 11px; border: 1px solid rgba(227, 179, 65, 0.35); background: var(--gold-dim); border-radius: 3px; font-size: 12px; color: var(--text); margin: 0 0 12px; }
+.pf-warn svg { flex: none; margin-top: 2px; color: var(--gold); }
+.pf-warn.red { border-color: rgba(255, 74, 61, 0.4); background: rgba(255, 74, 61, 0.1); }
+.pf-warn.red svg { color: var(--red); }
+
+.pf-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pf-stat { border: 1px solid var(--line); border-radius: 3px; padding: 9px 10px; display: flex; flex-direction: column; gap: 3px; }
+.pf-stat span { font: 600 9.5px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+.pf-stat b { font: 600 16px/1.2 var(--mono); color: var(--text); }
+.pf-stat small { font-size: 10.5px; color: var(--text-3); }
+:is(.pf, .pf-page) .red { color: var(--red); } :is(.pf, .pf-page) .amber { color: var(--amber); }
+:is(.pf, .pf-page) .green { color: var(--green); } :is(.pf, .pf-page) .cyan { color: var(--cyan); }
+
+.pf-tests, .pf-ev, .pf-limits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pf-tests li { display: grid; grid-template-columns: 42px 1fr; column-gap: 8px; color: var(--text); font-size: 12.5px; }
+.pf-tests li b { font: 700 10px/1.6 var(--mono); letter-spacing: 0.1em; color: var(--green); }
+.pf-tests li.no b { color: var(--red); }
+.pf-tests li small { grid-column: 2; color: var(--text-3); font-size: 11.5px; }
+.pf-ev li { font-size: 12px; color: var(--text); display: grid; grid-template-columns: 38px 1fr; column-gap: 6px; }
+.pf-ev li b { font: 600 11px/1.5 var(--mono); color: #ff7a5c; }
+.pf-ev li small { grid-column: 2; color: var(--text-3); }
+.pf-ev li.more { display: block; color: var(--text-3); }
+.pf-limits li { font-size: 12px; padding-left: 12px; position: relative; }
+.pf-limits li::before { content: "–"; position: absolute; left: 0; color: var(--text-3); }
+
+.pf-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pf-table th { text-align: left; font: 600 9.5px/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); padding: 6px 6px; border-bottom: 1px solid var(--line-2); }
+.pf-table td { padding: 7px 6px; border-bottom: 1px solid var(--line); color: var(--text); vertical-align: top; }
+.pf-table td small { display: block; color: var(--text-3); font-size: 10.5px; margin-top: 2px; }
+.pf-table .r { text-align: right; font-family: var(--mono); }
+.pf-table tbody tr { cursor: pointer; }
+.pf-table tbody tr:hover td { background: rgba(130, 170, 200, 0.05); }
+.pf-inputs td small { max-width: 220px; }
+
+.btn-ghost { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 3px; border: 1px solid var(--line-2);
+  background: transparent; color: var(--text); font: 600 11px/1 var(--mono); letter-spacing: 0.08em; text-decoration: none; cursor: pointer; margin: 4px 0; }
+.btn-ghost:hover { border-color: var(--text-2); }
+.pf-drop { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; margin: 10px 0; padding: 14px; border: 1px dashed var(--line-2); border-radius: 4px; cursor: pointer; color: var(--text); }
+.pf-drop svg { color: var(--gold); }
+.pf-drop small { color: var(--text-3); font-size: 11px; }
+.pf-drop input { font-size: 11px; color: var(--text-2); max-width: 100%; }
+.pf-drop:hover { border-color: var(--gold); }
+
+.pf-card { position: fixed; z-index: 9; left: 14px; top: calc(var(--top) + 10px); width: 340px; max-height: calc(100vh - var(--top) - 120px); display: flex; flex-direction: column; }
+.pf-card .panel-head span { font: 600 12px/1.3 var(--sans); letter-spacing: 0.02em; color: var(--text); text-transform: none; }
+.pf-card .icon-btn { width: 24px; height: 24px; display: grid; place-items: center; border: 0; background: transparent; color: var(--text-3); cursor: pointer; }
+.pf-card-sub { padding: 8px 14px 0; font-size: 11.5px; color: var(--text-3); }
+.pf-card-body { overflow-y: auto; padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+.pf-band { border-left: 3px solid; padding: 6px 10px; background: rgba(130, 170, 200, 0.05); font-size: 12.5px; color: var(--text); }
+.pf-kv { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+.pf-kv span { font: 600 9.5px/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
+.pf-kv b { color: var(--text); font-weight: 500; }
+.pf-kv small { color: var(--text-3); font-size: 10.5px; }
+
+.pf-dock { position: fixed; z-index: 8; left: 14px; right: 404px; bottom: 36px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pf-dock .chip { height: 32px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--line-2); background: var(--panel); backdrop-filter: blur(10px);
+  color: var(--text-2); font: 600 11px/1 var(--mono); letter-spacing: 0.08em; cursor: pointer; }
+.pf-dock .chip.on { color: #1a1405; background: var(--gold); border-color: var(--gold); }
+.pf-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 7px 10px; border-radius: 3px; background: var(--panel); border: 1px solid var(--line); font-size: 11px; color: var(--text-2); margin-left: auto; }
+.pf-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.pf-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.pf-legend i.ln { width: 14px; height: 0; border-top: 2px dashed var(--gold); border-radius: 0; }
+.pf-legend i.dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5a36; }
+
+/* ---- portfolio */
+.pf-page { min-height: 100%; background: var(--bg); }
+.pf-port { padding: calc(var(--top) + 28px) 28px 40px; max-width: 1280px; margin: 0 auto; }
+.pf-port-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 18px; }
+.pf-port-head h1 { margin: 0 0 8px; font: 600 26px/1.15 var(--cond); color: var(--text); letter-spacing: 0.01em; }
+.pf-port-head p { margin: 0; max-width: 720px; color: var(--text-2); font-size: 14px; line-height: 1.5; }
+.pf-seg { display: flex; border: 1px solid var(--line-2); border-radius: 3px; overflow: hidden; flex: none; }
+.pf-seg button { height: 32px; padding: 0 14px; border: 0; background: transparent; color: var(--text-2); font: 600 11px/1 var(--mono); letter-spacing: 0.08em; cursor: pointer; }
+.pf-seg button.on { background: var(--gold); color: #1a1405; }
+.pf-rank { font-size: 13px; }
+.pf-rank td { padding: 12px 8px; }
+.pf-rank td.rank { font: 600 18px/1 var(--mono); color: var(--gold); width: 40px; }
+.pf-rank td small { display: inline-flex; align-items: center; gap: 4px; }
+.pf-conf { display: inline-block; min-width: 22px; text-align: center; padding: 3px 6px; border-radius: 3px; font: 700 11px/1 var(--mono); border: 1px solid; }
+.pf-conf.c-H { color: var(--green); } .pf-conf.c-M { color: var(--amber); } .pf-conf.c-L { color: var(--red); }
+.pf-open { display: inline-flex; align-items: center; gap: 4px; color: var(--gold); text-decoration: none; font: 600 11px/1 var(--mono); letter-spacing: 0.08em; }
+.pf-port-notes { margin-top: 22px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; color: var(--text-3); font-size: 12.5px; line-height: 1.55; }
+.pf-port-notes b { color: var(--text-2); }
+.pf-port-notes code { font: 11.5px var(--mono); color: var(--cyan); }
+
+/* ---- the Malaysia map's site list (outside the guided demo) */
+.gl-sites { margin: 10px 14px 0; display: flex; flex-direction: column; gap: 6px; }
+.gl-sites a { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 10px; border: 1px solid var(--line-2); border-radius: 3px; color: var(--text); text-decoration: none; font-size: 12px; }
+.gl-sites a small { color: var(--text-3); font-size: 10.5px; }
+.gl-sites a:hover { border-color: var(--gold); }
+.globe-site { transform: translate(calc(50% + 14px), -50%); display: flex; flex-direction: column; gap: 3px; align-items: flex-start; padding: 5px 9px;
+  background: rgba(8, 16, 22, 0.85); border: 1px solid rgba(227, 179, 65, 0.45); border-radius: 3px; color: var(--text); cursor: pointer; text-decoration: none; }
+.globe-site b { font: 600 10.5px/1 var(--mono); letter-spacing: 0.14em; color: var(--gold); }
+.globe-site span { font-size: 10.5px; color: var(--text-2); }
+
+@media (max-width: 760px) {
+  :is(.pf, .pf-page, .pf2) .statusbar .readout, :is(.pf, .pf-page, .pf2) .statusbar .status-pill, :is(.pf, .pf-page, .pf2) .sb-context { display: none; }
+  :is(.pf, .pf-page) .statusbar .btn-gold { display: inline-flex; }   /* the platform's only way back on a phone */
+  .pf-panel { left: 8px; right: 8px; width: auto; top: auto; height: 46vh; bottom: 30px; }
+  .pf-dock { right: 8px; left: 8px; bottom: calc(46vh + 38px); }
+  .pf-legend { display: none; }
+  .pf-card { left: 8px; right: 8px; width: auto; }
+  .pf .leaflet-control-zoom { margin-right: 10px !important; }
+  .pf-port { padding: calc(var(--top) + 16px) 16px 32px; }
+  .pf-port-head { flex-direction: column; align-items: flex-start; }
+  .pf-rank { display: block; overflow-x: auto; }
+  .pf-port-notes { grid-template-columns: 1fr; }
+}
+.globe-hint a { color: var(--gold); }
+/* OSM's standard tiles, dimmed to sit under the console (no API key needed) */
+.pf .pf-tiles { filter: grayscale(0.7) brightness(0.55) contrast(1.1); }
+.pf-table .r { white-space: nowrap; }
+.pf-rank td small { display: flex; }
+
+/* ---- the 2D site app (22 Oct 2026): the 3D planner's frame, with the map underneath */
+.pf2 .pf-map { position: fixed; inset: var(--top) 0 var(--bottom) var(--rail); background: #05090d; }
+.pf2 .leaflet-container { background: #05090d; font-family: var(--sans); }
+.pf2 .pf-tiles { filter: grayscale(0.7) brightness(0.55) contrast(1.1); transition: filter 1.2s; }
+.pf2.stormy .pf-tiles { filter: grayscale(0.85) brightness(0.38) contrast(1.15); }   /* the sky darkens in the storm */
+.pf2 .leaflet-tooltip { background: var(--panel-solid); color: var(--text); border: 1px solid var(--line-2); border-radius: 3px; font-size: 11.5px; box-shadow: none; }
+.pf2 .leaflet-tooltip::before { display: none; }
+.pf2 .leaflet-bar a { background: var(--panel-solid); color: var(--text-2); border-color: var(--line); }
+.pf2 .leaflet-control-zoom { margin-right: 342px !important; margin-bottom: 14px !important; }
+.pf2 .caps-list { grid-template-columns: 1fr; }
+.pf2 .caps-list label { flex-direction: row; align-items: center; justify-content: space-between; }
+.pf2 .caps-list label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf2 .caps-list input { max-width: 150px; }
+.pf-info { display: flex; flex-direction: column; overflow: hidden; }
+.pf-info .pf-body { overflow-y: auto; }
+.cyan-t { color: var(--cyan) !important; }
+.pf-rain { position: fixed; inset: var(--top) 0 var(--bottom) var(--rail); z-index: 5; pointer-events: none; width: calc(100% - var(--rail));
+  height: calc(100% - var(--top) - var(--bottom)); opacity: 0; transition: opacity 1s; }
+.pf-rain.on { opacity: 1; }
+.clean-frame .pf-rain, .clean-frame.pf2 .pf-map { left: 0; width: 100%; }
+
+/* zones reveal outwards as the site opens; colours ease between bands */
+.pf-zone { transition: fill 0.6s ease, fill-opacity 0.6s ease, stroke 0.3s; animation: pf-reveal 0.7s ease-out both; animation-delay: calc(var(--i, 0) * 25ms); }
+@keyframes pf-reveal { from { opacity: 0; } to { opacity: 1; } }
+/* built-out land hatches in (the 3D blocks rising) */
+.pf-built { transition: fill-opacity 0.8s ease; }
+/* flow: drains run downhill, zones send their water to their outlet */
+.pf-drainflow { animation: pf-dash var(--dur, 1.5s) linear infinite; stroke-linecap: round; }
+.pf-flowline { stroke: rgba(150, 215, 255, 0.75); stroke-dasharray: 3 7; animation: pf-dash var(--dur, 2s) linear infinite; stroke-linecap: round; }
+.pf-flowline.cross { stroke: #e3b341; stroke-dasharray: 5 6; }
+@keyframes pf-dash { to { stroke-dashoffset: -32; } }
+.pf-drain { transition: stroke 0.5s, stroke-width 0.5s; }
+/* ponds ripple in the storm */
+.pf-pond.storm { animation: pf-ripple 2.6s ease-in-out infinite; }
+@keyframes pf-ripple { 0%, 100% { fill-opacity: 0.75; } 50% { fill-opacity: 0.5; } }
+/* the what-if pond grows in */
+.pf-grow { transform-box: fill-box; transform-origin: center; animation: pf-grow 0.9s cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes pf-grow { from { transform: scale(0.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .pf-zone, .pf-grow, .pf-pond.storm { animation: none; }
+  .pf-drainflow, .pf-flowline { animation: none; }
+}
+/* zone tags with the change from today; pond fill gauges */
+.pf-ztag span { position: absolute; transform: translate(-50%, -50%); padding: 1px 4px; border-radius: 2px; background: rgba(6, 11, 17, 0.72);
+  font: 600 9.5px/1.3 var(--mono); color: var(--text-2); white-space: nowrap; letter-spacing: 0.04em; pointer-events: none; }
+.pf-ztag span.up { color: #ffb4a8; } .pf-ztag span.down { color: #9ff0c8; }
+.pf-gauge div { position: absolute; transform: translate(-50%, -115%); display: grid; grid-template-columns: auto 46px auto; align-items: center; gap: 5px;
+  padding: 3px 6px; border-radius: 3px; background: rgba(6, 11, 17, 0.88); border: 1px solid var(--line-2); white-space: nowrap; pointer-events: none; }
+.pf-gauge b { font: 600 10px/1 var(--sans); color: var(--text); }
+.pf-gauge i { position: relative; height: 5px; border-radius: 2px; background: rgba(130, 170, 200, 0.2); overflow: hidden; }
+.pf-gauge em { position: absolute; inset: 0; transform-origin: left; transition: transform 0.6s ease; }
+.pf-gauge em.low { background: var(--green); } .pf-gauge em.medium { background: var(--amber); } .pf-gauge em.high { background: var(--red); }
+.pf-gauge span { font: 600 10px/1 var(--mono); color: var(--text-2); }
+/* a lever change rings the parts it moves */
+.pf-ping i { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--gold);
+  animation: pf-ping 1.3s ease-out 2; }
+.pf-ping span { position: absolute; left: 18px; top: -10px; padding: 3px 7px; border-radius: 2px; background: var(--gold); color: var(--bg);
+  font: 600 10.5px/1.2 var(--mono); white-space: nowrap; letter-spacing: 0.04em; }
+@keyframes pf-ping { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
+@media (max-width: 860px) {
+  .pf2 .pf-map, .pf-rain { left: 0; width: 100%; }
+  .pf2 .leaflet-control-zoom { margin-right: 10px !important; }
+}

@@ -1,6 +1,6 @@
 // Planner view panels: the live results panel, the zone / pond inspector card, the band legend and the About drawer.
 import { Droplet, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { BAND_COLOR, roomOf, zoneLook, type Basis, type Controls, type ScenarioId } from "../lib/data";
 import { recordOf, streetDrainsOf } from "../lib/evidence";
 import { change, drainsTo, m3, num } from "../lib/format";
@@ -23,6 +23,7 @@ function Bar({ v, max, mark, color }: { v: number; max: number; mark?: number; c
 }
 
 export function Results(p: { res: any; base: any; scenario: ScenarioId; name: string; c: Controls; storm: number; basis: Basis }) {
+  const [open, setOpen] = useState(false);       // phones: a one-line summary until tapped
   const sc = p.res.scenarios[p.scenario], now = p.res.scenarios.now;
   // the capacity a pond is measured against: the entered one, else (when colouring against capacity) the assumed one,
   // less the share the planner says is lost to silt
@@ -49,7 +50,10 @@ export function Results(p: { res: any; base: any; scenario: ScenarioId; name: st
   const t = sc.trunk_drain;
   const tc = t.ratio >= 1 ? BAND_COLOR.high : t.ratio >= 0.8 ? BAND_COLOR.medium : "#35d0e6";
   return (
-    <aside className="panel panel-right results" data-spot="results">
+    <aside className={`panel panel-right results ${open ? "open" : ""}`} data-spot="results">
+      <button className="res-toggle" onClick={() => setOpen(!open)} aria-expanded={open}>
+        <span>{p.name}</span><b>Pond A {m3(sc.ponds.pond_A.storage_required_m3)} · drain {Math.round(sc.trunk_drain.ratio * 100)} %</b><i>{open ? "Less" : "More"}</i>
+      </button>
       <div className="panel-head"><span>SCREENING RESULT</span><em>{p.storm > 0.5 ? "STORM" : "CLEAR DAY"}</em></div>
       <div className="res-scen">{p.name}</div>
       <div className="res-storm">{p.c.ari}-year · {sc.duration_h}-hour design storm · {num(sc.intensity_mm_hr, 1)} mm/h</div>
@@ -102,7 +106,7 @@ export function Card(p: { pick: Pick; results: any; inputs: any; routes: Record<
       <aside className="panel card" data-spot="card">
         <div className="panel-head"><span>ZONE {p.pick.id}</span><button className="x" onClick={p.close} aria-label="Close"><X size={14} /></button></div>
         <h3>{zi.name}</h3>
-        <div className="sub">{zi.council} council side · draft zone, awaiting hydrology sign-off</div>
+        <div className="sub">{zi.council} council side · draft zone, not an official catchment</div>
         <span className="band-tag" style={{ ["--b" as any]: BAND_COLOR[look.band] }}>{look.label}</span>
         <dl>
           <Row k="Area">{num(zi.area_ha.value, 1)} ha</Row>

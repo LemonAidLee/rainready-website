@@ -4,7 +4,8 @@
 //   data/zones.json -> public/data/zones_meta.json (ids, areas, routes, outlines; no triangles)
 //   screening.ts (the TypeScript port, held equal to screening.py)  -> src/sim/screening.ts
 //   three's Draco decoder                                           -> public/draco/
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+//   ../platform/{network.ts, sites/*} (the platform: network engine and site packs) -> src/sim/, public/sites/
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,5 +28,18 @@ const zones = JSON.parse(readFileSync(join(sim, "data", "zones.json"), "utf-8"))
 writeFileSync(join(site, "public", "data", "zones_meta.json"), JSON.stringify({ zones }));
 rmSync(join(site, "public", "data", "zones.json"), { force: true });
 cpSync(join(sim, "screening.ts"), join(site, "src", "sim", "screening.ts"));
+// the platform (22 Oct 2026): the network engine and every site pack (simulations/platform/sites/<id>/) -> public/sites/
+const platform = join(sim, "..", "platform");
+cpSync(join(platform, "network.ts"), join(site, "src", "sim", "network.ts"));
+rmSync(join(site, "public", "sites"), { recursive: true, force: true });
+mkdirSync(join(site, "public", "sites"), { recursive: true });
+cpSync(join(platform, "sites", "index.json"), join(site, "public", "sites", "index.json"));
+for (const id of readdirSync(join(platform, "sites"))) {
+  const from = join(platform, "sites", id);
+  if (!existsSync(join(from, "site.json"))) continue;
+  mkdirSync(join(site, "public", "sites", id));
+  for (const f of ["site.json", "inputs.json", "outputs.json", "geo.json", "register_template.csv"])
+    if (existsSync(join(from, f))) cpSync(join(from, f), join(site, "public", "sites", id, f));
+}
 cpSync(join(site, "node_modules", "three", "examples", "jsm", "libs", "draco", "gltf"), join(site, "public", "draco"), { recursive: true });
 console.log("synced data, simulator and Draco decoder");

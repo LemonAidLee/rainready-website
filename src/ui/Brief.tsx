@@ -159,7 +159,7 @@ function Engineers({ inputs, results, adjusted }: { inputs: any; results: any; a
         <AssumptionChecks />
       </div>
 
-      <h3>Zones (draft, awaiting hydrology sign-off)</h3>
+      <h3>Zones (draft, not an official catchment)</h3>
       <div className="sheet">
         <table className="t">
           <thead><tr><th>Zone</th><th>Council side</th><th>Area</th><th>C now → upstream</th><th>Drains to</th><th>Storage shortfall today</th>{SCENARIOS.slice(1).map((s) => <th key={s.id}>{s.label}</th>)}</tr></thead>

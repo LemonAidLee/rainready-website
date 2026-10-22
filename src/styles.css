@@ -782,3 +782,103 @@ details.eng[open] summary svg { transform: rotate(180deg); }
 .tag-report.st-Sent { --rc: #79b3ff; }
 .html-pass .tag-report { pointer-events: auto; }
 @media (max-width: 860px) { .tag-report span { display: none; } }
+
+/* ---- hover tips (team leader, 22 Oct 2026): descriptions wait under the pointer instead of crowding the panel */
+.hover-tip { position: fixed; z-index: 60; width: 280px; padding: 10px 12px; border-radius: 4px; background: var(--panel-solid);
+  border: 1px solid var(--line-2); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); font-size: 12px; line-height: 1.45; color: var(--text-2);
+  pointer-events: none; animation: tip-in 0.16s ease-out; }
+.hover-tip.left { transform: translateX(-100%); }
+.hover-tip b { display: block; margin-bottom: 5px; font: 600 12.5px/1.25 var(--cond); color: var(--text); }
+.hover-tip p { margin: 0 0 6px; }
+.hover-tip p:last-child { margin-bottom: 0; }
+.hover-tip .tip-watch { display: flex; gap: 6px; align-items: flex-start; color: var(--cyan); font-size: 11.5px; }
+.hover-tip .tip-watch svg { flex: none; margin-top: 2px; }
+@keyframes tip-in { from { opacity: 0; translate: 0 3px; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .hover-tip { animation: none; } }
+.ctl-head { cursor: help; outline: none; border-radius: 3px; }
+.ctl-head:focus-visible { box-shadow: 0 0 0 1px var(--gold); }
+.ctl-head .ctl-info { color: var(--text-3); opacity: 0.7; }
+.ctl-head:hover .ctl-info { color: var(--gold); opacity: 1; }
+
+/* ==== Phones (team leader, 22 Oct 2026): one thing at a time. The map is the hero; results are a one-line summary
+   until tapped; panels open as bottom sheets; short rail labels; fewer floating labels. Desktop is unchanged: the
+   phone-only parts below are hidden above 860 px. ==== */
+.lbl-s, .sp-short, .res-toggle, .gl-toggle { display: none; }
+@media (max-width: 860px) {
+  /* header: a smaller wordmark and a short status pill, so nothing overlaps */
+  .statusbar { padding: 0 12px; gap: 10px; }
+  .wm-text b { font-size: 14px; letter-spacing: 0.22em; }
+  .wordmark .mark { width: 18px; height: 18px; }
+  .status-pill { height: 24px; padding: 0 9px; font-size: 9px; letter-spacing: 0.1em; }
+  .status-pill .sp-long { display: none; } .status-pill .sp-short { display: inline; }
+
+  /* rail: short labels; the least-used items stay on the desktop rail */
+  .rail-btn .lbl { display: none; } .rail-btn .lbl-s { display: block; }
+  .rail-btn span.lbl-s { font-size: 9px; letter-spacing: 0.04em; text-transform: none; font-family: var(--sans); font-weight: 500; }
+  .rail-btn.no-phone { display: none; }
+  .rail { height: 60px; padding: 4px 4px calc(4px + env(safe-area-inset-bottom)); }
+
+  /* results: a one-line summary at the top until tapped */
+  .right-col { top: calc(var(--top) + 8px); max-height: none; overflow: visible; }
+  .results .res-toggle { display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 10px; width: 100%;
+    padding: 10px 12px; border: 0; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+  .res-toggle span { grid-column: 1; font: 500 11px/1.2 var(--sans); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .res-toggle b { grid-column: 1; font: 600 14px/1.35 var(--mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .res-toggle i { grid-column: 2; grid-row: 1 / 3; align-self: center; font: 600 10px/1 var(--mono); font-style: normal; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--cyan); padding: 6px 9px; border: 1px solid rgba(53, 208, 230, 0.4); border-radius: 999px; }
+  .results .panel-head, .results:not(.open) > :not(.res-toggle) { display: none; }
+  .results.open { max-height: 52vh; overflow-y: auto; }
+  .results.open .res-row, .results.open .res-row + .res-row + .res-row, .results.open .res-foot, .results.open .res-storm { display: block; }
+  .results .res-row { padding: 9px 12px; }
+  .results .res-v b { font-size: 18px; }
+
+  /* the inspector card: a sheet from the bottom */
+  .right-col .card, .right-col .pf-card { position: fixed; left: 0; right: 0; bottom: 60px; top: auto; width: auto; max-height: 50vh; overflow-y: auto;
+    border-radius: 14px 14px 0 0; border-bottom: 0; z-index: 12; box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45); }
+  .app:has(.right-col .card) .viewbar, .app:has(.right-col .pf-card) .viewbar { display: none; }
+
+  /* panels: bottom sheets with a handle, above the rail */
+  .panel-left { left: 0; right: 0; bottom: 60px; top: auto; width: auto; max-height: 62vh; border-radius: 14px 14px 0 0; border-bottom: 0;
+    box-shadow: 0 -14px 34px rgba(0, 0, 0, 0.5); }
+  .panel-left::before { content: ""; display: block; width: 36px; height: 4px; margin: 8px auto 0; border-radius: 2px; background: var(--line-2); }
+  .panel-left .panel-head { position: sticky; top: 0; z-index: 2; background: var(--panel-solid); }
+
+  /* Scenario: presets as one swipeable row, so the levers are in reach */
+  .presets { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 8px; padding: 10px 12px 12px; scrollbar-width: none; }
+  .presets::-webkit-scrollbar { display: none; }
+  .presets > * { flex: 0 0 auto; }
+  .preset-group { display: none; }
+  .preset, .preset.wide { flex: 0 0 152px; scroll-snap-align: start; min-height: 64px; }
+  .preset small { display: none; }
+  .ctl-sec { padding: 12px 14px; margin-top: 0; }
+  .ctl-head { min-height: 32px; }                 /* a comfortable target for the long press that opens its note */
+  .slider input[type=range] { height: 30px; }
+
+  /* tips: a toast above the rail, never off the side of the screen */
+  .hover-tip, .hover-tip.left { left: 12px !important; right: 12px; width: auto; top: auto !important; bottom: 72px !important; transform: none; }
+
+  /* 3D labels: keep the spots, ponds and areas; drop the rest on a small screen */
+  .tag-report, .tag-record, .tag-drain { display: none; }
+  .tag-area b { font-size: 15px; letter-spacing: 0.18em; }
+  .tag-pond b { font-size: 12px; }
+  .tag-spot { padding: 4px 8px; } .tag-spot b { font-size: 13px; letter-spacing: 0.12em; }
+  .viewbar { bottom: 72px; }
+
+  /* Malaysia map: the globe first; the layer list folds away behind one button, at the bottom */
+  .globe-panel { top: auto; bottom: 68px; left: 8px; right: 8px; max-height: 56vh; overflow-y: auto; }
+  .globe-panel .panel-head { padding: 8px 12px; }
+  .globe-panel .gl-toggle { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line-2);
+    background: transparent; color: var(--text-2); font: 600 10px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+  .globe-panel:not(.open) .gl-row, .globe-panel:not(.open) .gl-sites { display: none; }
+  .globe-panel .gl-go { margin: 10px 12px 12px; width: calc(100% - 24px); height: 40px; }
+  .globe-cluster { display: none; }
+  .globe-model span, .globe-site span { display: none; }
+  .globe-hint { bottom: auto; top: calc(var(--top) + 10px); left: 12px; right: 12px; transform: none; font-size: 12px; }
+
+  /* 2D sites: the same, plus fewer map labels */
+  .pf2 .leaflet-control-zoom { display: none; }
+  .pf2 .pf-ztag { display: none; }
+  .pf2 .pf-gauge b { display: none; }
+  .pf2 .viewbar { bottom: 72px; }
+  .pf-info .pf-tabs button { font-size: 10px; letter-spacing: 0.08em; }
+}

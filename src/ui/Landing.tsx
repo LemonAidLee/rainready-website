@@ -9,16 +9,22 @@ import { ArrowRight, PlayCircle } from "lucide-react";
 import { Globe, type Hover, type MapLayers, type National, type Report } from "../scene/Globe";
 import { Ticker, Wordmark } from "./Shell";
 import { toShared, useReports } from "../resident/store";
+import { loadIndex, type SiteEntry } from "../platform/data";
 
 export function Landing(p: { rail: ReactNode; onEnter: () => void; onDemo: () => void;
                               onData?: (n: { flood: number; floodYears: string; flash: number; towns: number; major: number; majorYears: string }) => void;
-                              fly?: boolean }) {   // fly: the guided demo asks for the fly-in
+                              fly?: boolean; inDemo?: boolean }) {   // fly: the guided demo asks for the fly-in
+  // the site registry (22 Oct 2026): listed outside the guided demo only, so the demo's frames stay as recorded
+  const [sites, setSites] = useState<SiteEntry[] | null>(null);
+  useEffect(() => { if (!p.inDemo) loadIndex().then(setSites).catch(() => setSites(null)); }, [p.inDemo]);
+  const others = !p.inDemo && sites ? sites.filter((s) => s.view === "2d") : [];
   const [data, setData] = useState<National | null>(null);
   const stored = useReports();
   const reports = useMemo(() => stored.filter((r) => r.status !== "Cleared").map(toShared).filter(Boolean) as Report[], [stored]);
   const [error, setError] = useState<string | null>(null);
   const [layers, setLayers] = useState<MapLayers>({ flood: true, flash: true, major: true, reports: true, states: true });
   const [hover, setHover] = useState<Hover>(null);
+  const [sheet, setSheet] = useState(false);          // phones: the layer list stays folded until asked for
   const [far, setFar] = useState(false);
   const [flying, setFlying] = useState(false);
 
@@ -55,7 +61,7 @@ export function Landing(p: { rail: ReactNode; onEnter: () => void; onDemo: () =>
           <Canvas camera={{ fov: 35, near: 0.0002, far: 50, position: [0, 0, 4] }} dpr={[1, 2]} gl={{ antialias: true }}>
             <Suspense fallback={null}>
               <Globe data={data} reports={reports} layers={layers} flying={flying} onFly={fly} onEnter={p.onEnter}
-                onHover={setHover} onFar={setFar} />
+                onHover={setHover} onFar={setFar} sites={others} />
             </Suspense>
           </Canvas>
         )}
@@ -72,14 +78,15 @@ export function Landing(p: { rail: ReactNode; onEnter: () => void; onDemo: () =>
           <div className="readout"><span>FLASH-FLOOD LOCATIONS · ALL STATES</span><b className="orange-t">{data ? `${data.flash.reduce((a, f) => a + f.n, 0)} · ${data.flash.length} TOWNS · 2017` : "—"}</b></div>
           <div className="readout"><span>MAJOR EVENTS</span><b className="rose-t">{data ? `${data.major.length} · ${Math.min(...data.major.map((m) => m.y))}–${Math.max(...data.major.map((m) => m.y))}` : "—"}</b></div>
           <div className="readout"><span>RESIDENT REPORTS</span><b className="gold-t">{reports.length} OPEN{reports.some((r) => r.example) ? " · INCL. SAMPLES" : ""}</b></div>
-          <div className="readout"><span>CATCHMENT MODELS</span><b className="cyan">1 · BANDAR BUKIT RAJA</b></div>
+          <div className="readout"><span>CATCHMENT MODELS</span><b className="cyan">{others.length ? `${others.length + 1} · BBR IN 3D + ${others.length} GENERATED` : "1 · BANDAR BUKIT RAJA"}</b></div>
           <button className="btn-gold" onClick={p.onDemo}><PlayCircle size={14} /> GUIDED DEMO</button>
         </div>
       </header>
       {p.rail}
 
-      <aside className="panel globe-panel">
-        <div className="panel-head"><span>MAP LAYERS</span></div>
+      <aside className={`panel globe-panel ${sheet ? "open" : ""}`}>
+        <div className="panel-head"><span>MAP LAYERS</span>
+          <button className="gl-toggle" onClick={() => setSheet(!sheet)} aria-expanded={sheet}>{sheet ? "Hide" : "Layers"}</button></div>
         <label className="gl-row"><input type="checkbox" checked={layers.flood} onChange={() => toggle("flood")} />
           <i className="gl-dot red" /><span><b>Flood records, Selangor</b><small>JPS Selangor GIS, {years}: one dot per record, at its mapped spot. Place, year and type only</small></span></label>
         <label className="gl-row"><input type="checkbox" checked={layers.flash} onChange={() => toggle("flash")} />
@@ -92,10 +99,18 @@ export function Landing(p: { rail: ReactNode; onEnter: () => void; onDemo: () =>
           <i className="gl-line" /><span><b>State lines</b><small>Natural Earth</small></span></label>
         <div className="gl-row static"><i className="gl-ring" /><span><b>Catchment model</b><small>Where the planner view exists: Bandar Bukit Raja (simulated town on real drains and ponds)</small></span></div>
         <button className="btn-gold gl-go" onClick={fly}>Open Bandar Bukit Raja <ArrowRight size={14} /></button>
+        {others.length > 0 && (
+          <div className="gl-sites">
+            {others.map((s) => <a key={s.id} href={`#/site/${s.id}`}><span>{s.name}<br /><small>Generated from open data · 2D · confidence {s.confidence}</small></span><ArrowRight size={13} /></a>)}
+            <a href="#/sites"><span>All sites, ranked<br /><small>Portfolio: every site, one method</small></span><ArrowRight size={13} /></a>
+          </div>
+        )}
       </aside>
 
       {far && !flying && (
-        <div className="globe-hint">No catchment model here yet. This pilot covers <button onClick={fly}>Bandar Bukit Raja</button>.</div>
+        <div className="globe-hint">{others.length
+          ? <>No catchment model here yet. Open <button onClick={fly}>Bandar Bukit Raja</button>{others.map((s) => <span key={s.id}>, <a href={`#/site/${s.id}`}>{s.name}</a></span>)} or <a href="#/sites">all sites</a>.</>
+          : <>No catchment model here yet. This pilot covers <button onClick={fly}>Bandar Bukit Raja</button>.</>}</div>
       )}
 
       {hover && (

@@ -1,0 +1,284 @@
+{
+ "id": "batutiga",
+ "name": "Padang Jawa – Batu Tiga",
+ "kind": "generated",
+ "view": "2d",
+ "state": "Selangor",
+ "centre": [
+  3.0605,
+  101.4835
+ ],
+ "bbox": [
+  3.042,
+  101.465,
+  3.079,
+  101.502
+ ],
+ "councils": [
+  "Shah Alam",
+  "Bandaraya Klang"
+ ],
+ "confidence": "L",
+ "label": "SCREENING · GENERATED FROM OPEN DATA · LOWER CONFIDENCE",
+ "summary": "43 zones, 15 drains, 7 ponds (2 on JPS's list), 2 councils",
+ "tests": [
+  {
+   "test": "JPS flood records inside the area",
+   "passed": true,
+   "detail": "32 records, 2017-2024"
+  },
+  {
+   "test": "Drainage crosses a council line",
+   "passed": true,
+   "detail": "4 crossing links between Bandaraya Klang, Shah Alam"
+  },
+  {
+   "test": "Public pond or drain register",
+   "passed": true,
+   "detail": "2 ponds on JPS Selangor's pond list"
+  }
+ ],
+ "evidence": {
+  "flood_records": [
+   {
+    "year": 2017,
+    "type": "Not stated",
+    "place": "Jalan Bukit Raja berhadapan Aeon dan Taman Rashna Daerah Klang",
+    "district": "Klang"
+   },
+   {
+    "year": 2017,
+    "type": "Not stated",
+    "place": "Jalan bukit raja, Tmn Rashna, Tol Sg Rasah Dan Kg Air Kuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2017,
+    "type": "Not stated",
+    "place": "Kg Padang Jawa Daerah Klang",
+    "district": "Klang"
+   },
+   {
+    "year": 2018,
+    "type": "Not stated",
+    "place": "Jalan Sg Rasau",
+    "district": "Klang"
+   },
+   {
+    "year": 2018,
+    "type": "Not stated",
+    "place": "Kg Air Kuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2018,
+    "type": "Not stated",
+    "place": "Tol Sg Rasau arah Klang Dan Kg Air Kuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Jalan Batu Tiga Klang dan Tugu Keris",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Kawasan Kg. Air Kuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Kawasan Tmn Perumahan Tmn Rashna dan Tugu Keris",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Kg Air Kuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Kg Air Kuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "TAMAN RASHNA DAN JALAN SG RASAU",
+    "district": "Klang"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Pintu Air Bukit Kuda",
+    "district": "Klang"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Sekitar kawasan Persimpangan Bukit Botak",
+    "district": "Gombak"
+   },
+   {
+    "year": 2023,
+    "type": "Flash flood",
+    "place": "Kampung Air Kuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2023,
+    "type": "Flash flood",
+    "place": "Kampung Bukit Kuda (Jalan Landasan, Jalan Haji Salleh)",
+    "district": "Klang"
+   },
+   {
+    "year": 2023,
+    "type": "Flash flood",
+    "place": "Padang Jawa (Kampung Padang Jawa, JPJ)",
+    "district": "Klang"
+   },
+   {
+    "year": 2023,
+    "type": "Flash flood",
+    "place": "Seksyen 7 Shah Alam",
+    "district": "Petaling"
+   },
+   {
+    "year": 2023,
+    "type": "Flash flood",
+    "place": "Taman Rashna",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Jalan Mat Raji",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Kampung Air Kuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Kampung Bukit Kuda (Jalan Landasan, Jalan Haji Salleh)",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Kg. Padang Jawa",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Kg. Padang Jawa",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Lorong Jasa",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Padang Jawa (Kampung Padang Jawa, JPJ)",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Pintu Air Bukit Kuda",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Seksyen 17 Shah Alam",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Seksyen 7 Shah Alam",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Taman Baru",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Monsoon flood",
+    "place": "Taman Intan , Bukit Rajah",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Taman Rashna",
+    "district": "Klang"
+   }
+  ],
+  "flash_2017": [
+   {
+    "town": "Klang",
+    "places": [
+     "Kg Budiman",
+     "Taman Klang Utama",
+     "Pulau Indah - Kg Sg Pinang",
+     "Teluk Nipah",
+     "Taman Rashna"
+    ]
+   },
+   {
+    "town": "Shah Alam",
+    "places": [
+     "Batu 3",
+     "Laluan motosikal Lebuhraya Persekutuan",
+     "KTMB Batu 3",
+     "Kg Melayu Subang",
+     "Jalan Utama Pasaraya Giant Seksyen 7 Shah Alam"
+    ]
+   }
+  ]
+ },
+ "storm": {
+  "station": "2913001 Pusat Kwln. JPS T Gong",
+  "distance_km": 14.7
+ },
+ "sources": [
+  "OpenStreetMap contributors (ODbL), via Overpass, 22 Oct 2026",
+  "Copernicus DEM GLO-30 (ESA / EU), AWS open data mirror",
+  "JPS Selangor pond list (Kolam_Fasa_JPS), jpsselgis.selangor.gov.my",
+  "JPS Selangor flood records 2017-2024 and JPS flash-flood list 2017 (website/public/data/national.json)",
+  "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2, Tables 2.3, 2.5, 2.B1"
+ ],
+ "limits": [
+  "Zones follow mapped roads and drains, not surveyed catchments; outlets are assumed",
+  "Drain sizes are typical values by OSM type, not measured; this is the weakest input",
+  "Pond capacities are assumed from water area x 1.5 m; enter stated capacities to replace them",
+  "OSM misses buildings and drains; terrain is a surface model with ~1 m error or more",
+  "Flash floods and ponding only; rivers are treated as where water leaves"
+ ],
+ "build": {
+  "script": "simulations/platform/build_site.py",
+  "date": "2026-10-22",
+  "fetch_s": 222.5,
+  "build_s": 8.1,
+  "refreshed": true
+ }
+}

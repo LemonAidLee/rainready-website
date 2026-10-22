@@ -35,7 +35,7 @@ function Camera({ focus, view, nonce, inset }: { focus: Focus | null; view: View
   const zoom = size.width < 860 ? size.width / 3000 : Math.min(free / 3250, (size.height - 110) / 2050);
   useEffect(() => {
     const cam = camera as THREE.OrthographicCamera;
-    if (size.width < 860) cam.setViewOffset(size.width, size.height, 0, -Math.min(170, size.height * 0.2), size.width, size.height);
+    if (size.width < 860) cam.setViewOffset(size.width, size.height, 0, -Math.min(40, size.height * 0.05), size.width, size.height);   // phones: results fold to one line, so the model sits near the centre
     else cam.setViewOffset(size.width, size.height, -(inset[0] - inset[1]) / 2, 0, size.width, size.height);
     cam.updateProjectionMatrix();
   }, [camera, size.width, size.height, inset[0], inset[1]]);
@@ -270,7 +270,7 @@ export default function App() {
     };
     return (
       <div className={clean ? "clean-frame" : ""}>
-        <Landing rail={rail} onEnter={enter} onDemo={startDemo} onData={setNational} fly={demoFly} />
+        <Landing rail={rail} onEnter={enter} onDemo={startDemo} onData={setNational} fly={demoFly} inDemo={demo !== null} />
         {demo !== null && <DemoBar step={demo} ctx={ctx} {...demoControls} />}
       </div>
     );

@@ -1,0 +1,192 @@
+{
+ "id": "serdang",
+ "name": "Seri Kembangan – Seri Serdang",
+ "kind": "generated",
+ "view": "2d",
+ "state": "Selangor",
+ "centre": [
+  3.0215,
+  101.7165
+ ],
+ "bbox": [
+  3.003,
+  101.698,
+  3.04,
+  101.735
+ ],
+ "councils": [
+  "Majlis Perbandaran Kajang",
+  "Majlis Bandaraya Subang Jaya"
+ ],
+ "confidence": "L",
+ "label": "SCREENING · GENERATED FROM OPEN DATA · LOWER CONFIDENCE",
+ "summary": "38 zones, 7 drains, 15 ponds (5 on JPS's list), 2 councils",
+ "tests": [
+  {
+   "test": "JPS flood records inside the area",
+   "passed": true,
+   "detail": "19 records, 2017-2024"
+  },
+  {
+   "test": "Drainage crosses a council line",
+   "passed": true,
+   "detail": "8 crossing links between Majlis Bandaraya Subang Jaya, Majlis Perbandaran Kajang"
+  },
+  {
+   "test": "Public pond or drain register",
+   "passed": true,
+   "detail": "5 ponds on JPS Selangor's pond list"
+  }
+ ],
+ "evidence": {
+  "flood_records": [
+   {
+    "year": 2017,
+    "type": "Not stated",
+    "place": "Kawasan The mines resort city",
+    "district": "Petaling"
+   },
+   {
+    "year": 2017,
+    "type": "Not stated",
+    "place": "i. Lebuhraya BESRAYA (sekitar U-turn berhadapan gate Bluewater estate dan 'slow lane')",
+    "district": "Petaling"
+   },
+   {
+    "year": 2018,
+    "type": "Not stated",
+    "place": "Lebuhraya BESRAYA (sekitar U-turn berhadapan gate Bluewater estate) Sri Serdang",
+    "district": "Petaling"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Jalan 18/45 & SK Seri Serdang",
+    "district": "Petaling"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Seri Kembangan i. Jalan SK9/6",
+    "district": "Petaling"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Seri Serdang i. Jalan 18/45 ii. SK Seri Serdang",
+    "district": "Petaling"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "i. Lebuhraya BESRAYA ii. Landasan KTM Serdang",
+    "district": "Petaling"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "KTM Seri Serdang (Entrance Bluwater Estate & KM 2.7 arah selatan BESRAYA",
+    "district": "Petaling"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Seri Kembangan - Anak Sg. Pati Liat - susur masuk U-turn KM 2.7 BESRAYA",
+    "district": "Petaling"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Seri Serdang (SK Seri Serdang)",
+    "district": "Petaling"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Seri Serdang (SK Seri Serdang)",
+    "district": "Petaling"
+   },
+   {
+    "year": 2023,
+    "type": "Flash flood",
+    "place": "Lebuhraya Besraya",
+    "district": "Petaling"
+   },
+   {
+    "year": 2023,
+    "type": "Flash flood",
+    "place": "Seri Kembangan (Sungai Patiliat, Jln SK 9, Kolam Bluewater)",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Lebuhraya BESRAYA",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "SK Seri Serdang",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Sri Kembangan",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Taman Kembangsari",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Taman Serdang Jaya",
+    "district": "Petaling"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Taman Sri Serdang",
+    "district": "Petaling"
+   }
+  ],
+  "flash_2017": [
+   {
+    "town": "Serdang",
+    "places": [
+     "Kolam Takungan A Jabatan Pertanian Serdang"
+    ]
+   }
+  ]
+ },
+ "storm": {
+  "station": "2917001 Setor JPS Kajang",
+  "distance_km": 8.3
+ },
+ "sources": [
+  "OpenStreetMap contributors (ODbL), via Overpass, 22 Oct 2026",
+  "Copernicus DEM GLO-30 (ESA / EU), AWS open data mirror",
+  "JPS Selangor pond list (Kolam_Fasa_JPS), jpsselgis.selangor.gov.my",
+  "JPS Selangor flood records 2017-2024 and JPS flash-flood list 2017 (website/public/data/national.json)",
+  "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2, Tables 2.3, 2.5, 2.B1"
+ ],
+ "limits": [
+  "Zones follow mapped roads and drains, not surveyed catchments; outlets are assumed",
+  "Drain sizes are typical values by OSM type, not measured; this is the weakest input",
+  "Pond capacities are assumed from water area x 1.5 m; enter stated capacities to replace them",
+  "OSM misses buildings and drains; terrain is a surface model with ~1 m error or more",
+  "Flash floods and ponding only; rivers are treated as where water leaves"
+ ],
+ "build": {
+  "script": "simulations/platform/build_site.py",
+  "date": "2026-10-22",
+  "fetch_s": 207.0,
+  "build_s": 12.8,
+  "refreshed": false
+ }
+}

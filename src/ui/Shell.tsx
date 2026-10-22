@@ -37,7 +37,8 @@ export function StatusBar(p: { status: "sourced" | "whatif"; storm: number; res:
         <div className="readout"><span>SCENARIO</span><b className="cyan">{p.scenarioName.toUpperCase()}</b></div>
         <div className="readout"><span>TRUNK DRAIN</span><b className={p.storm > 0.5 ? (r >= 1 ? "red" : r >= 0.8 ? "amber" : "green") : ""}>{p.storm > 0.5 ? `${Math.round(r * 100)} %` : "DRY"}</b></div>
         <button className={`status-pill ${p.status}`} onClick={p.onAbout} title="How these numbers are made">
-          <i />{p.status === "sourced" ? "SCREENING ESTIMATE · MSMA 2" : "YOUR WHAT-IF · MSMA 2"}
+          <i /><span className="sp-long">{p.status === "sourced" ? "SCREENING ESTIMATE · MSMA 2" : "YOUR WHAT-IF · MSMA 2"}</span>
+          <span className="sp-short">{p.status === "sourced" ? "ESTIMATE" : "WHAT-IF"}</span>
         </button>
         <button className="btn-gold" onClick={p.onDemo}><PlayCircle size={14} /> GUIDED DEMO</button>
       </div>
@@ -48,25 +49,29 @@ export function StatusBar(p: { status: "sourced" | "whatif"; storm: number; res:
 export type Panel = "controls" | "layers" | null;
 
 export function Rail(p: { route: string; panel: Panel; setPanel: (x: Panel) => void; onAbout: () => void; onDemo: () => void }) {
-  const Item = (q: { icon: ReactNode; label: string; on?: boolean; onClick?: () => void; href?: string; spot?: string }) =>
-    q.href ? <a className={`rail-btn ${q.on ? "on" : ""}`} href={q.href} title={q.label} data-spot={q.spot}>{q.icon}<span>{q.label}</span></a>
-           : <button className={`rail-btn ${q.on ? "on" : ""}`} onClick={q.onClick} title={q.label} data-spot={q.spot}>{q.icon}<span>{q.label}</span></button>;
+  // phones (22 Oct 2026): a short label under each icon; the least-used items stay on the desktop rail only
+  const Item = (q: { icon: ReactNode; label: string; short?: string; phone?: false; on?: boolean; onClick?: () => void; href?: string; spot?: string }) => {
+    const cls = `rail-btn ${q.on ? "on" : ""} ${q.phone === false ? "no-phone" : ""}`;
+    const body = <>{q.icon}<span className="lbl">{q.label}</span><span className="lbl-s">{q.short ?? q.label}</span></>;
+    return q.href ? <a className={cls} href={q.href} title={q.label} data-spot={q.spot}>{body}</a>
+                  : <button className={cls} onClick={q.onClick} title={q.label} data-spot={q.spot}>{body}</button>;
+  };
   const planner = p.route === "planner" || p.route === "demo";
   return (
     <nav className="rail" aria-label="Views">
-      <Item icon={<Globe2 size={18} />} label="Malaysia" href="#/" on={p.route === ""} />
-      <Item icon={<Map size={18} />} label="Planner" href="#/planner" on={planner && p.panel === null} />
-      <Item icon={<SlidersHorizontal size={18} />} label="Scenario" on={planner && p.panel === "controls"}
+      <Item icon={<Globe2 size={18} />} label="Malaysia" short="Map" href="#/" on={p.route === ""} />
+      <Item icon={<Map size={18} />} label="Planner" short="Model" href="#/planner" on={planner && p.panel === null} />
+      <Item icon={<SlidersHorizontal size={18} />} label="Scenario" short="What-if" on={planner && p.panel === "controls"}
         onClick={() => { if (!planner) location.hash = "#/planner"; p.setPanel(p.panel === "controls" ? null : "controls"); }} />
       <Item icon={<LayersIcon size={18} />} label="Layers" on={planner && p.panel === "layers"} spot="rail-layers"
         onClick={() => { if (!planner) location.hash = "#/planner"; p.setPanel(p.panel === "layers" ? null : "layers"); }} />
       <div className="rail-sep" />
-      <Item icon={<Users size={18} />} label="Residents" href="#/resident" on={p.route === "resident"} />
-      <Item icon={<FileText size={18} />} label="Findings" href="#/brief" on={p.route === "brief"} spot="rail-brief" />
-      <Item icon={<LifeBuoy size={18} />} label="Recovery" href="#/after" on={p.route === "after"} spot="rail-after" />
+      <Item icon={<Users size={18} />} label="Residents" short="Report" href="#/resident" on={p.route === "resident"} />
+      <Item icon={<FileText size={18} />} label="Findings" short="Brief" href="#/brief" on={p.route === "brief"} spot="rail-brief" />
+      <Item icon={<LifeBuoy size={18} />} label="Recovery" short="After" href="#/after" on={p.route === "after"} spot="rail-after" />
       <div className="rail-grow" />
       <Item icon={<PlayCircle size={18} />} label="Demo" onClick={p.onDemo} />
-      <Item icon={<Info size={18} />} label="About" onClick={p.onAbout} />
+      <Item icon={<Info size={18} />} label="About" phone={false} onClick={p.onAbout} />
     </nav>
   );
 }

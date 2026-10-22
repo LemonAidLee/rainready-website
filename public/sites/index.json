@@ -1,0 +1,261 @@
+{
+ "_about": "RainReady site registry, written by simulations/platform/build_index.py. Screening comparisons on mostly assumed inputs; not a verdict on any site.",
+ "sites": [
+  {
+   "id": "kemuning",
+   "name": "Kota Kemuning – Bukit Kemuning",
+   "kind": "generated",
+   "view": "2d",
+   "route": null,
+   "state": "Selangor",
+   "centre": [
+    2.997,
+    101.51
+   ],
+   "councils": [
+    "Shah Alam",
+    "Bandaraya Klang"
+   ],
+   "confidence": "L",
+   "label": "SCREENING · GENERATED FROM OPEN DATA · LOWER CONFIDENCE",
+   "summary": "46 zones, 15 drains, 15 ponds (1 on JPS's list), 2 councils",
+   "tests": [
+    {
+     "test": "JPS flood records inside the area",
+     "passed": true,
+     "detail": "32 records, 2017-2024"
+    },
+    {
+     "test": "Drainage crosses a council line",
+     "passed": true,
+     "detail": "1 crossing links between Bandaraya Klang, Shah Alam"
+    },
+    {
+     "test": "Public pond or drain register",
+     "passed": true,
+     "detail": "1 ponds on JPS Selangor's pond list"
+    }
+   ],
+   "flood_records": 32,
+   "metrics": {
+    "now": {
+     "storage_gap_m3": 164050,
+     "ponds": 15,
+     "ponds_over": 7,
+     "drains": 15,
+     "drains_over": 11,
+     "crossings": 1,
+     "crossing_flow_m3_s": 0.89,
+     "area_ha": 2461.3,
+     "area_high_ha": 1681.0,
+     "duration_h": 0.5
+    },
+    "upstream": {
+     "storage_gap_m3": 209757,
+     "ponds": 15,
+     "ponds_over": 10,
+     "drains": 15,
+     "drains_over": 11,
+     "crossings": 1,
+     "crossing_flow_m3_s": 1.03,
+     "area_ha": 2461.3,
+     "area_high_ha": 1857.0,
+     "duration_h": 0.5
+    }
+   },
+   "rank": 1
+  },
+  {
+   "id": "serdang",
+   "name": "Seri Kembangan – Seri Serdang",
+   "kind": "generated",
+   "view": "2d",
+   "route": null,
+   "state": "Selangor",
+   "centre": [
+    3.0215,
+    101.7165
+   ],
+   "councils": [
+    "Majlis Perbandaran Kajang",
+    "Majlis Bandaraya Subang Jaya"
+   ],
+   "confidence": "L",
+   "label": "SCREENING · GENERATED FROM OPEN DATA · LOWER CONFIDENCE",
+   "summary": "38 zones, 7 drains, 15 ponds (5 on JPS's list), 2 councils",
+   "tests": [
+    {
+     "test": "JPS flood records inside the area",
+     "passed": true,
+     "detail": "19 records, 2017-2024"
+    },
+    {
+     "test": "Drainage crosses a council line",
+     "passed": true,
+     "detail": "8 crossing links between Majlis Bandaraya Subang Jaya, Majlis Perbandaran Kajang"
+    },
+    {
+     "test": "Public pond or drain register",
+     "passed": true,
+     "detail": "5 ponds on JPS Selangor's pond list"
+    }
+   ],
+   "flood_records": 19,
+   "metrics": {
+    "now": {
+     "storage_gap_m3": 92694,
+     "ponds": 15,
+     "ponds_over": 5,
+     "drains": 7,
+     "drains_over": 4,
+     "crossings": 8,
+     "crossing_flow_m3_s": 142.92,
+     "area_ha": 1685.3,
+     "area_high_ha": 679.8,
+     "duration_h": 0.5
+    },
+    "upstream": {
+     "storage_gap_m3": 162893,
+     "ponds": 15,
+     "ponds_over": 7,
+     "drains": 7,
+     "drains_over": 4,
+     "crossings": 8,
+     "crossing_flow_m3_s": 172.28,
+     "area_ha": 1685.3,
+     "area_high_ha": 783.3,
+     "duration_h": 0.5
+    }
+   },
+   "rank": 2
+  },
+  {
+   "id": "bbr",
+   "name": "Bandar Bukit Raja – Setia Alam",
+   "kind": "curated",
+   "view": "3d",
+   "route": "#/planner",
+   "state": "Selangor",
+   "centre": [
+    3.0893,
+    101.435
+   ],
+   "councils": [
+    "Majlis Bandaraya Diraja Klang",
+    "Majlis Bandaraya Shah Alam"
+   ],
+   "confidence": "M",
+   "label": "SCREENING ESTIMATE · MSMA 2 · CURATED 3D SITE",
+   "summary": "9 draft zones, 1 trunk drain, 2 ponds (both on JPS's list), 2 councils; simulated township in 3D, loosely based on BBR",
+   "tests": [
+    {
+     "test": "JPS flood records inside the area",
+     "passed": true,
+     "detail": "Bandar Bukit Raja, ponding, 2023 and 2024 (JPS Selangor GIS); Setia Alam flash flood 2024 just north"
+    },
+    {
+     "test": "Drainage crosses a council line",
+     "passed": true,
+     "detail": "Area A (Shah Alam) drains into the trunk drain on the Klang side"
+    },
+    {
+     "test": "Public pond or drain register",
+     "passed": true,
+     "detail": "Ponds A and B are K02 and K03 on JPS Selangor's pond list (phase 1)"
+    }
+   ],
+   "flood_records": 3,
+   "metrics": {
+    "now": {
+     "storage_gap_m3": 67725,
+     "ponds": 2,
+     "ponds_over": 1,
+     "drains": 1,
+     "drains_over": 1,
+     "crossings": 2,
+     "crossing_flow_m3_s": 6.54,
+     "area_ha": 420.2,
+     "area_high_ha": 303.4,
+     "duration_h": 3
+    },
+    "upstream": {
+     "storage_gap_m3": 67725,
+     "ponds": 2,
+     "ponds_over": 1,
+     "drains": 1,
+     "drains_over": 1,
+     "crossings": 2,
+     "crossing_flow_m3_s": 8.49,
+     "area_ha": 420.2,
+     "area_high_ha": 303.4,
+     "duration_h": 3
+    }
+   },
+   "rank": 3
+  },
+  {
+   "id": "batutiga",
+   "name": "Padang Jawa – Batu Tiga",
+   "kind": "generated",
+   "view": "2d",
+   "route": null,
+   "state": "Selangor",
+   "centre": [
+    3.0605,
+    101.4835
+   ],
+   "councils": [
+    "Shah Alam",
+    "Bandaraya Klang"
+   ],
+   "confidence": "L",
+   "label": "SCREENING · GENERATED FROM OPEN DATA · LOWER CONFIDENCE",
+   "summary": "43 zones, 15 drains, 7 ponds (2 on JPS's list), 2 councils",
+   "tests": [
+    {
+     "test": "JPS flood records inside the area",
+     "passed": true,
+     "detail": "32 records, 2017-2024"
+    },
+    {
+     "test": "Drainage crosses a council line",
+     "passed": true,
+     "detail": "4 crossing links between Bandaraya Klang, Shah Alam"
+    },
+    {
+     "test": "Public pond or drain register",
+     "passed": true,
+     "detail": "2 ponds on JPS Selangor's pond list"
+    }
+   ],
+   "flood_records": 32,
+   "metrics": {
+    "now": {
+     "storage_gap_m3": 32597,
+     "ponds": 7,
+     "ponds_over": 4,
+     "drains": 15,
+     "drains_over": 9,
+     "crossings": 4,
+     "crossing_flow_m3_s": 71.3,
+     "area_ha": 1684.6,
+     "area_high_ha": 990.9,
+     "duration_h": 0.5
+    },
+    "upstream": {
+     "storage_gap_m3": 49425,
+     "ponds": 7,
+     "ponds_over": 4,
+     "drains": 15,
+     "drains_over": 9,
+     "crossings": 4,
+     "crossing_flow_m3_s": 85.32,
+     "area_ha": 1684.6,
+     "area_high_ha": 990.9,
+     "duration_h": 0.5
+    }
+   },
+   "rank": 4
+  }
+ ]
+}

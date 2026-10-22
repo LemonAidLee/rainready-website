@@ -1,0 +1,263 @@
+{
+ "id": "kemuning",
+ "name": "Kota Kemuning – Bukit Kemuning",
+ "kind": "generated",
+ "view": "2d",
+ "state": "Selangor",
+ "centre": [
+  2.997,
+  101.51
+ ],
+ "bbox": [
+  2.972,
+  101.49,
+  3.022,
+  101.53
+ ],
+ "councils": [
+  "Shah Alam",
+  "Bandaraya Klang"
+ ],
+ "confidence": "L",
+ "label": "SCREENING · GENERATED FROM OPEN DATA · LOWER CONFIDENCE",
+ "summary": "46 zones, 15 drains, 15 ponds (1 on JPS's list), 2 councils",
+ "tests": [
+  {
+   "test": "JPS flood records inside the area",
+   "passed": true,
+   "detail": "32 records, 2017-2024"
+  },
+  {
+   "test": "Drainage crosses a council line",
+   "passed": true,
+   "detail": "1 crossing links between Bandaraya Klang, Shah Alam"
+  },
+  {
+   "test": "Public pond or drain register",
+   "passed": true,
+   "detail": "1 ponds on JPS Selangor's pond list"
+  }
+ ],
+ "evidence": {
+  "flood_records": [
+   {
+    "year": 2017,
+    "type": "Not stated",
+    "place": "kejadian banjir kg bukit naga seksyen 32 shah alam",
+    "district": "Klang"
+   },
+   {
+    "year": 2018,
+    "type": "Not stated",
+    "place": "Lot 164527 Jalan Kebun",
+    "district": "Klang"
+   },
+   {
+    "year": 2018,
+    "type": "Not stated",
+    "place": "Lot 164527 Jalan Kebun",
+    "district": "Klang"
+   },
+   {
+    "year": 2018,
+    "type": "Not stated",
+    "place": "Sekitar Kampung Jalan Kebun",
+    "district": "Klang"
+   },
+   {
+    "year": 2018,
+    "type": "Not stated",
+    "place": "Sekitar Taman Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Kawasan sekitar Dewan MBSA, Kg Jalan Kebun",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Kawasan sekitar Dewan MBSA, Kg Jalan Kebun",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Kawasan sekitar Taman Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Sekitar Kampung Jalan Kebun",
+    "district": "Klang"
+   },
+   {
+    "year": 2019,
+    "type": "Not stated",
+    "place": "Taman Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Batu 8 Jalan Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Batu 8 Jalan Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Batu 8 Jalan Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Kampung Jalan Kebun",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Kampung SC",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Sekitar Kawasan Masjid Al Bakri Bukit Naga",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Taman Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Taman Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2020,
+    "type": "Not stated",
+    "place": "Taman Bukit Naga, Jalan Batu 6",
+    "district": "Klang"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Jalan Kebun Barat, Jalan Abdullah",
+    "district": "Klang"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Kampung Bukit Naga Seksyen 34 (Jln. Klinik, Jln. Batu 6, Jln. Bukit Naga)",
+    "district": "Klang"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Kampung Bukit Naga Seksyen 34, Jalan Batu 6, Jalan Gambus, Jalan Rezab Buang dan Jalan Buk",
+    "district": "Klang"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Kawassan Kampung Bukit Naga, Jalan Batu 6",
+    "district": "Klang"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Taman Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2022,
+    "type": "Not stated",
+    "place": "Taman Sri Wangi",
+    "district": "Klang"
+   },
+   {
+    "year": 2023,
+    "type": "Flash flood",
+    "place": "Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2023,
+    "type": "Monsoon flood",
+    "place": "Jalan Kebun",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Batu 8 Jalan Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Bukit Kemuning",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Monsoon flood",
+    "place": "Jalan Kebun Nenas",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Kg. Bukit Naga",
+    "district": "Klang"
+   },
+   {
+    "year": 2024,
+    "type": "Flash flood",
+    "place": "Kg. Bukit Rimau",
+    "district": "Klang"
+   }
+  ],
+  "flash_2017": []
+ },
+ "storm": {
+  "station": "2913001 Pusat Kwln. JPS T Gong",
+  "distance_km": 15.8
+ },
+ "sources": [
+  "OpenStreetMap contributors (ODbL), via Overpass, 22 Oct 2026",
+  "Copernicus DEM GLO-30 (ESA / EU), AWS open data mirror",
+  "JPS Selangor pond list (Kolam_Fasa_JPS), jpsselgis.selangor.gov.my",
+  "JPS Selangor flood records 2017-2024 and JPS flash-flood list 2017 (website/public/data/national.json)",
+  "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2, Tables 2.3, 2.5, 2.B1"
+ ],
+ "limits": [
+  "Zones follow mapped roads and drains, not surveyed catchments; outlets are assumed",
+  "Drain sizes are typical values by OSM type, not measured; this is the weakest input",
+  "Pond capacities are assumed from water area x 1.5 m; enter stated capacities to replace them",
+  "OSM misses buildings and drains; terrain is a surface model with ~1 m error or more",
+  "Flash floods and ponding only; rivers are treated as where water leaves"
+ ],
+ "build": {
+  "script": "simulations/platform/build_site.py",
+  "date": "2026-10-22",
+  "fetch_s": 347.7,
+  "build_s": 17.3,
+  "refreshed": true
+ }
+}

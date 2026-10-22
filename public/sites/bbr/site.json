@@ -1,0 +1,37 @@
+{
+ "id": "bbr",
+ "name": "Bandar Bukit Raja – Setia Alam",
+ "kind": "curated",
+ "view": "3d",
+ "route": "#/planner",
+ "state": "Selangor",
+ "centre": [3.0893, 101.4350],
+ "councils": ["Majlis Bandaraya Diraja Klang", "Majlis Bandaraya Shah Alam"],
+ "confidence": "M",
+ "label": "SCREENING ESTIMATE · MSMA 2 · CURATED 3D SITE",
+ "summary": "9 draft zones, 1 trunk drain, 2 ponds (both on JPS's list), 2 councils; simulated township in 3D, loosely based on BBR",
+ "tests": [
+  {"test": "JPS flood records inside the area", "passed": true, "detail": "Bandar Bukit Raja, ponding, 2023 and 2024 (JPS Selangor GIS); Setia Alam flash flood 2024 just north"},
+  {"test": "Drainage crosses a council line", "passed": true, "detail": "Area A (Shah Alam) drains into the trunk drain on the Klang side"},
+  {"test": "Public pond or drain register", "passed": true, "detail": "Ponds A and B are K02 and K03 on JPS Selangor's pond list (phase 1)"}
+ ],
+ "assumed_capacity_m3": {
+  "pond_A": 83400,
+  "pond_B": 85900,
+  "_source": "ASSUMED for ranking only, as the BBR planner view does: mapped water area (pond A 55,611 m², pond B 57,255 m²) x 1.5 m live storage (research/HY_screening_inputs.md section 7), confidence L"
+ },
+ "evidence": {
+  "flood_records": [
+   {"year": 2023, "type": "Ponding", "place": "Bandar Bukit Raja, Klang", "district": "Klang"},
+   {"year": 2024, "type": "Ponding", "place": "Bandar Bukit Raja, Klang", "district": "Klang"},
+   {"year": 2024, "type": "Flash flood", "place": "Setia Alam", "district": "Petaling"}
+  ],
+  "press": "Residents say Jalan Makyong floods at least three times a year (Sinar Harian, 25 May 2024); see documentation/supporting/BBR_PUBLIC_DOCUMENT_SURVEY.md"
+ },
+ "storm": {"station": "2913001 Pusat Kawalan JPS Telok Gong", "distance_km": 13.0},
+ "sources": ["simulations/township-3d/inputs.json (sourced 21 Oct 2026, research/HY_screening_inputs.md)",
+             "JPS Selangor GIS (pond list, flood records)", "OpenStreetMap", "MSMA 2nd Edition (DID Malaysia, 2012)"],
+ "limits": ["Simulated township loosely based on BBR; the flood features are placed from OpenStreetMap",
+            "The trunk drain size is the weakest input (L)", "Pond capacities have no public source"],
+ "build": {"script": "hand-built: Blender model + screening.py (20-21 Oct 2026); network form by bbr_to_network.py"}
+}

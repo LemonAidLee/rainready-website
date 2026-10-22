@@ -1,0 +1,616 @@
+{
+ "_about": "BBR's screening inputs in the network format, converted by bbr_to_network.py from simulations/township-3d/inputs.json (the source; edit that, then re-run). Inputs of the RainReady screening simulator v2 (screening.py / screening.ts). Researched 21 Oct 2026 by Claude for the team leader from MSMA 2nd Edition and public data; see research/HY_screening_inputs.md. Every value has a unit, status, source and confidence.",
+ "_status_key": {
+  "sourced": "from a cited document",
+  "measured": "measured from the model (areas, land cover)",
+  "assumed": "a stated assumption with reasoning",
+  "planner input": "a what-if set by the user"
+ },
+ "storm": {
+  "ari_years": {
+   "value": 100,
+   "unit": "years",
+   "status": "sourced",
+   "source": "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 1 Design Acceptance Criteria, Table 1.1: link house / apartment, major system 100 yr; mixed developments take the highest ARI (Note 1)",
+   "confidence": "H"
+  },
+  "idf": {
+   "station": "2913001 Pusat Kawalan JPS Telok Gong (Selangor)",
+   "lambda": {
+    "value": 63.493,
+    "unit": "-",
+    "status": "sourced",
+    "source": "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2 Quantity Design Fundamentals, Table 2.B1 (ARI 2-100 yr, 5 min-72 h), station 2913001",
+    "confidence": "H"
+   },
+   "kappa": {
+    "value": 0.17,
+    "unit": "-",
+    "status": "sourced",
+    "source": "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2 Quantity Design Fundamentals, Table 2.B1, station 2913001",
+    "confidence": "H"
+   },
+   "theta": {
+    "value": 0.254,
+    "unit": "-",
+    "status": "sourced",
+    "source": "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2 Quantity Design Fundamentals, Table 2.B1, station 2913001",
+    "confidence": "H"
+   },
+   "eta": {
+    "value": 0.872,
+    "unit": "-",
+    "status": "sourced",
+    "source": "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2 Quantity Design Fundamentals, Table 2.B1, station 2913001",
+    "confidence": "H"
+   },
+   "station_choice": {
+    "value": "2913001",
+    "unit": "-",
+    "status": "assumed",
+    "source": "Nearest Selangor gauge in Table 2.B1 to BBR (3.09 N, 101.44 E). Location checked 21 Oct 2026 on JPS Selangor's own station layer (jpsselgis.selangor.gov.my, Hosted/Stesen_Hidrologi, 'Stesen Rain Fall'): Telemetri Telok Gong at 2.9951 N, 101.3679 E, about 13 km south-west of BBR, in Klang district, coastal like BBR; it matches the station-number grid (29 = 2.9 N, 13 = 101.3 E). Nearer JPS gauges (Bandar Klang, Pekan Meru) have no IDF constants in Table 2.B1. Neighbours 3314001 and 2815001 give a sensitivity range",
+    "confidence": "M",
+    "note": "Location H (JPS layer); that the telemetry station is the IDF gauge 2913001 is inferred from the name and grid (M)"
+   }
+  },
+  "durations_h": {
+   "value": [
+    0.5,
+    1,
+    2,
+    3,
+    6,
+    12,
+    24
+   ],
+   "unit": "h",
+   "status": "assumed",
+   "source": "MSMA 2.2.1: examine a range of storm durations; storm duration >= tc (MSMA 2.2.2). The critical one (most storage) is reported",
+   "confidence": "M"
+  },
+  "design_duration_h": {
+   "value": null,
+   "unit": "h",
+   "status": "planner input",
+   "source": "Empty: the design storm is today's critical duration. Set to one of durations_h to hold the storm fixed, e.g. so a blocked drain is compared with the clean drain under the same storm",
+   "confidence": "-"
+  },
+  "tc_hours": {
+   "value": 0.5,
+   "unit": "h",
+   "status": "assumed",
+   "source": "MSMA Table 2.1: overland flow (paved n* 0.015, 200 m, 1 % slope) ~9 min + drain flow (1 km, n 0.018, R 0.5 m, S 0.0013) ~13 min = ~23 min, rounded up to 0.5 h. Used for the pre-development peak (allowed release)",
+   "confidence": "L"
+  }
+ },
+ "method": {
+  "hydrograph_volume_factor": {
+   "value": 1.0,
+   "unit": "-",
+   "status": "sourced",
+   "source": "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2 Quantity Design Fundamentals, 2.3.2 Rational Hydrograph Method: Type 1 trapezoid and Type 2 triangle both hold Q x d",
+   "confidence": "H"
+  },
+  "c_predevelopment": {
+   "value": 0.4,
+   "unit": "-",
+   "status": "sourced",
+   "source": "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2 Quantity Design Fundamentals, Table 2.5 'Sport Fields, Park and Agriculture' (major system). BBR was a Sime Darby oil palm estate before the 2002 master plan (Wikipedia 'Bukit Raja'; EdgeProp)",
+   "confidence": "M",
+   "note": "Used for MSMA 1.2.1 peak discharge control: Qpost <= Qpre"
+  },
+  "band_change_medium_from": {
+   "value": 1.05,
+   "unit": "ratio",
+   "status": "assumed",
+   "source": "Team choice: a scenario needing 5 % more storage (or trunk demand) than today is 'medium'",
+   "confidence": "L"
+  },
+  "band_change_high_from": {
+   "value": 1.2,
+   "unit": "ratio",
+   "status": "assumed",
+   "source": "Team choice: 20 % more than today is 'high'",
+   "confidence": "L"
+  },
+  "band_capacity_medium_from": {
+   "value": 0.8,
+   "unit": "ratio",
+   "status": "assumed",
+   "source": "Team choice: storage required at 80 % of an entered stated capacity",
+   "confidence": "L"
+  },
+  "band_capacity_high_from": {
+   "value": 1.0,
+   "unit": "ratio",
+   "status": "assumed",
+   "source": "At or above 100 % the entered capacity is exceeded",
+   "confidence": "M"
+  }
+ },
+ "zones": {
+  "Z01": {
+   "name": "Upstream, Shah Alam side",
+   "council": "Shah Alam",
+   "drains_to": "trunk_drain",
+   "area_ha": {
+    "value": 23.14,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.648,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.717,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); upstream change: the 3.56 ha of invented aprons in Z01 become commercial (0.95)",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 0.0,
+    "commercial": 1.26,
+    "park": 0.0,
+    "bare": 0.0,
+    "grass": 15.53,
+    "road": 4.36,
+    "water": 1.99
+   }
+  },
+  "Z02": {
+   "name": "North strip",
+   "council": "Klang",
+   "drains_to": "trunk_drain",
+   "area_ha": {
+    "value": 66.16,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.628,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.628,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); unchanged: the upstream change is in Z01 only",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 5.99,
+    "commercial": 0.0,
+    "park": 3.59,
+    "bare": 0.0,
+    "grass": 42.28,
+    "road": 14.31,
+    "water": 0.0
+   }
+  },
+  "Z03": {
+   "name": "West, north of Sungai Keramat",
+   "council": "Klang",
+   "drains_to": "pond_A",
+   "area_ha": {
+    "value": 63.68,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.782,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.782,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); unchanged: the upstream change is in Z01 only",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 15.98,
+    "commercial": 10.32,
+    "park": 4.85,
+    "bare": 0.0,
+    "grass": 16.08,
+    "road": 16.46,
+    "water": 0.0
+   }
+  },
+  "Z04": {
+   "name": "Pond A, centre",
+   "council": "Klang",
+   "drains_to": "pond_A",
+   "area_ha": {
+    "value": 35.25,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.71,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.71,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); unchanged: the upstream change is in Z01 only",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 6.19,
+    "commercial": 0.0,
+    "park": 1.32,
+    "bare": 0.0,
+    "grass": 16.53,
+    "road": 5.65,
+    "water": 5.56
+   }
+  },
+  "Z05": {
+   "name": "Centre-east (Sumazau estate)",
+   "council": "Klang",
+   "drains_to": "trunk_drain",
+   "area_ha": {
+    "value": 36.81,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.72,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.72,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); unchanged: the upstream change is in Z01 only",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 8.84,
+    "commercial": 0.0,
+    "park": 1.32,
+    "bare": 0.0,
+    "grass": 16.25,
+    "road": 10.41,
+    "water": 0.0
+   }
+  },
+  "Z06": {
+   "name": "South-west",
+   "council": "Klang",
+   "drains_to": "pond_A",
+   "area_ha": {
+    "value": 40.12,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.664,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.664,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); unchanged: the upstream change is in Z01 only",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 2.14,
+    "commercial": 2.58,
+    "park": 4.21,
+    "bare": 6.64,
+    "grass": 14.97,
+    "road": 9.57,
+    "water": 0.01
+   }
+  },
+  "Z07": {
+   "name": "South-centre (pond B)",
+   "council": "Klang",
+   "drains_to": "pond_B",
+   "area_ha": {
+    "value": 77.24,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.727,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.727,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); unchanged: the upstream change is in Z01 only",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 11.3,
+    "commercial": 3.7,
+    "park": 0.65,
+    "bare": 7.37,
+    "grass": 30.54,
+    "road": 17.82,
+    "water": 5.86
+   }
+  },
+  "Z08": {
+   "name": "East, Klang side",
+   "council": "Klang",
+   "drains_to": "trunk_drain",
+   "area_ha": {
+    "value": 38.21,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.699,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.699,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); unchanged: the upstream change is in Z01 only",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 0.9,
+    "commercial": 2.82,
+    "park": 0.0,
+    "bare": 0.0,
+    "grass": 21.19,
+    "road": 8.38,
+    "water": 4.92
+   }
+  },
+  "Z09": {
+   "name": "South-east",
+   "council": "Klang",
+   "drains_to": "TBD",
+   "area_ha": {
+    "value": 39.57,
+    "unit": "ha",
+    "status": "measured",
+    "source": "Plan area of the DRAFT zone (data/zones.json), water included",
+    "confidence": "M",
+    "note": "Zone edges are a draft from mapped lines (TOWNSHIP_3D_AND_SIMULATOR.md 4.8), not an official catchment"
+   },
+   "c_now": {
+    "value": 0.763,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95)",
+    "confidence": "M",
+    "note": "Land cover is the SIMULATED model town; table values are H, the cover is M-L"
+   },
+   "c_upstream": {
+    "value": 0.763,
+    "unit": "-",
+    "status": "measured",
+    "source": "MSMA 2 Table 2.5 (Major System column) area-weighted by Eq. 2.4 over the zone's land cover in the model (landcover.py: terrace 0.90, commercial 0.95, park 0.40, bare 0.60, grass 0.50, roads 0.95, water 0.95); unchanged: the upstream change is in Z01 only",
+    "confidence": "M"
+   },
+   "cover_ha": {
+    "terrace": 15.26,
+    "commercial": 0.0,
+    "park": 0.0,
+    "bare": 0.0,
+    "grass": 15.64,
+    "road": 9.09,
+    "water": 0.0
+   }
+  }
+ },
+ "external_inflows": {
+  "EXT_A": {
+   "name": "Area A beyond the model edge (upstream, Shah Alam side)",
+   "council": "Shah Alam",
+   "drains_to": "trunk_drain",
+   "enters_at": "the drain that crosses the council line (3.09294 N, 101.44433 E)",
+   "area_ha": {
+    "value": 50.0,
+    "unit": "ha",
+    "status": "assumed",
+    "source": "No usable upstream boundary exists (AR1, 11 Oct 2026: terrain routing failed; JPS Kawasan_Tadahan unavailable). 50 ha is a stated test value; the website lets the planner change it",
+    "confidence": "L"
+   },
+   "c_now": {
+    "value": 0.648,
+    "unit": "-",
+    "status": "assumed",
+    "source": "Same as the in-model part of Area A (Z01)",
+    "confidence": "L"
+   },
+   "c_upstream": {
+    "value": 0.9,
+    "unit": "-",
+    "status": "planner input",
+    "source": "Scenario definition: the remaining land develops as link and terrace housing (MSMA 2 Table 2.5, major system, 0.90), where peak control is not fully achieved. A what-if, not a forecast of Area A",
+    "confidence": "-"
+   }
+  }
+ },
+ "ponds": {
+  "pond_A": {
+   "osm_id": 399570465,
+   "capacity_m3": {
+    "value": null,
+    "unit": "m3",
+    "status": "planner input",
+    "source": "No public figure (AR1). Must not be measured from the model. Enter the stated capacity to see the gap",
+    "confidence": "-"
+   },
+   "drains_to": "trunk_drain",
+   "council": "Klang"
+  },
+  "pond_B": {
+   "osm_id": 359496461,
+   "capacity_m3": {
+    "value": null,
+    "unit": "m3",
+    "status": "planner input",
+    "source": "No public figure (AR1). Enter the stated capacity",
+    "confidence": "-"
+   },
+   "drains_to": "trunk_drain",
+   "council": "Klang"
+  }
+ },
+ "scenarios": {
+  "now": {
+   "c": "c_now",
+   "label": "Today's land cover",
+   "what_if_ponds": []
+  },
+  "upstream": {
+   "c": "c_upstream",
+   "label": "More paved land upstream, where peak control is not fully achieved",
+   "what_if_ponds": []
+  },
+  "upstream_plus_pond": {
+   "c": "c_upstream",
+   "label": "Upstream change, plus a what-if pond",
+   "what_if_ponds": [
+    "W1"
+   ]
+  }
+ },
+ "drains": {
+  "trunk_drain": {
+   "_what": "The east-west drain at y ~ 300 that carries the north side, Area A and the pond outlets west to the main ditch",
+   "section": {
+    "top_width_m": {
+     "value": 6.0,
+     "unit": "m",
+     "status": "assumed",
+     "source": "Not measurable (tree cover at the council corner, AR1 imagery). Between the model's 3 m ditch and the 8-10 m main ditch it joins (AR1 imagery, 3.0976 N 101.4337 E)",
+     "confidence": "L"
+    },
+    "bottom_width_m": {
+     "value": 3.0,
+     "unit": "m",
+     "status": "assumed",
+     "source": "Trapezoid like the main ditch (AR1 imagery)",
+     "confidence": "L"
+    },
+    "depth_m": {
+     "value": 2.0,
+     "unit": "m",
+     "status": "assumed",
+     "source": "Typical for an urban concrete trunk drain; not measured",
+     "confidence": "L"
+    },
+    "manning_n": {
+     "value": 0.018,
+     "unit": "-",
+     "status": "sourced",
+     "source": "MSMA 2nd Edition (DID Malaysia, 2012), Chapter 2 Quantity Design Fundamentals, Table 2.3: lined drain, concrete, rough finish",
+     "confidence": "H"
+    },
+    "slope": {
+     "value": 0.0013,
+     "unit": "m/m",
+     "status": "assumed",
+     "source": "Regional ground fall 1.3 m/km (AR1 plane fit to GLO-30 over 18 km2, M); drain gradients inside the block cannot be read from the DEM",
+     "confidence": "L"
+    }
+   },
+   "blockage": {
+    "value": 0.0,
+    "unit": "fraction",
+    "status": "planner input",
+    "source": "Share of the drain's carrying capacity lost to silt and rubbish (0 = clean, as designed). Not measured anywhere public; a maintenance what-if. Screening simplification: capacity scales by (1 - blockage); capped at 0.9",
+    "confidence": "-"
+   },
+   "_limit": "Only this drain is counted as conveyance; overland and road (major-system) flow paths are not, so storage required is an upper-end screening figure",
+   "drains_to": "outfall",
+   "council": "Klang"
+  }
+ },
+ "what_if_ponds": {
+  "W1": {
+   "_what": "Illustrative new pond on land OSM tags brownfield (way 1267917541, 6.6 ha) in zone Z06, catching Z06 runoff before pond A. A what-if, not a proposal",
+   "serves": [
+    "Z06"
+   ],
+   "osm_landuse": 1267917541,
+   "drains_to": "pond_A",
+   "capacity_m3": {
+    "value": 25000.0,
+    "unit": "m3",
+    "status": "planner input",
+    "source": "Test size for the what-if (a planner input, not a fact)",
+    "confidence": "-"
+   },
+   "outlet_m3_s": {
+    "value": 0.0,
+    "unit": "m3/s",
+    "status": "planner input",
+    "source": "Default 0: the what-if pond holds what it catches during the storm and empties afterwards. With the trunk drain full, a pond that passes flow on does not reduce pond A's storage",
+    "confidence": "-"
+   }
+  }
+ }
+}

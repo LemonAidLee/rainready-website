@@ -169,6 +169,7 @@ function Label(p: { at: LonLat; children: ReactNode; className: string; near?: n
 export function Globe(p: {
   data: National; reports: Report[]; layers: MapLayers;
   flying: boolean; onFly: () => void; onEnter: () => void; onHover: (h: Hover) => void; onFar: (far: boolean) => void;
+  sites?: { id: string; name: string; centre: [number, number] }[];   // generated sites (2D view), outside the demo
 }) {
   const { camera, gl, size } = useThree();
   const controls = useRef<any>(null);
@@ -299,6 +300,16 @@ export function Globe(p: {
         </button>
       </Label>
 
+      {/* generated sites from the registry (22 Oct 2026): a gold ring and a link to their 2D view */}
+      {(p.sites ?? []).map((s) => (
+        <group key={s.id}>
+          <SiteRing at={[s.centre[1], s.centre[0]]} />
+          <Label at={[s.centre[1], s.centre[0]]} className="globe-model-wrap" far={1.25}>
+            <a className="globe-site" href={`#/site/${s.id}`}><b>{s.name.toUpperCase()}</b><span>Generated site · click to open</span></a>
+          </Label>
+        </group>
+      ))}
+
       {p.layers.flood && (
         <Label at={[101.75, 3.55]} className="globe-cluster" near={1.3}>
           <b>{p.data.flood.length.toLocaleString("en-GB")}</b> official flood records · Selangor
@@ -312,5 +323,18 @@ export function Globe(p: {
       <OrbitControls ref={controls} enabled={!p.flying} enablePan={false} enableDamping dampingFactor={0.08}
         minDistance={1.004} maxDistance={4.5} zoomSpeed={0.9} />
     </>
+  );
+}
+
+/** A generated site's ring: gold, steady size on screen (the BBR ring is cyan and drives the fly-in). */
+function SiteRing({ at }: { at: LonLat }) {
+  const pos = useMemo(() => toXYZ(at, 1.0015), [at]);
+  const ref = useRef<THREE.Mesh>(null);
+  const { camera } = useThree();
+  useFrame(() => { if (ref.current) ref.current.scale.setScalar(Math.max(0.0004, (camera.position.length() - 1) * 0.008)); });
+  return (
+    <mesh ref={ref} position={pos} onUpdate={(m) => m.lookAt(pos.clone().multiplyScalar(2))}>
+      <ringGeometry args={[0.7, 1, 40]} /><meshBasicMaterial color="#e3b341" transparent opacity={0.85} side={THREE.DoubleSide} depthWrite={false} />
+    </mesh>
   );
 }
