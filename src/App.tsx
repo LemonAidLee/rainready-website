@@ -323,8 +323,8 @@ export default function App() {
           <Suspense fallback={null}>
             <Township results={res} scenario={scenario} basis={basis} storm={storm} controls={controls} trees={data.trees.trees} pick={pick}
               layers={layers} onPick={setPick} onReady={setAnchors} onHover={setHover} onShown={() => setShown(true)} />
-            {anchors && labelsOn && <Overlays anchors={anchors} council={data.overlays.council_line.paths as any} results={res} scenario={scenario} basis={basis}
-              controls={controls} storm={storm} layers={layers} pickZone={(id) => setPick({ kind: "zone", id })} reports={reportPins} />}
+            {anchors && <Overlays anchors={anchors} council={data.overlays.council_line.paths as any} results={res} scenario={scenario} basis={basis}
+              controls={controls} storm={storm} layers={layers} pickZone={(id) => setPick({ kind: "zone", id })} reports={reportPins} show={labelsOn} />}
             {anchors && points.length > 0 && <Pointers items={points} anchors={anchors} />}
           </Suspense>
           <Rain strength={storm * rainK} />

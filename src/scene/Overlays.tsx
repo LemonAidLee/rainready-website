@@ -5,7 +5,7 @@
 //    upstream development rises, with its flow into the council-corner drain
 //  - HTML labels (areas, spots, zones, ponds) at a fixed, readable screen size
 //  - the guided demo's pointers (ring, beam and callout on the place to look at)
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -22,14 +22,44 @@ export const EXT_ORIGIN: XY = [940, 660];                    // south-west corne
 const AREA_B: XY = [440, -1150];                              // Area B label: south-west edge, clear of pond B's tag
 export const VISUAL_DRAIN_K = 2.5;                          // trunk drain ribbon is drawn 2.5x its width so it reads at overview zoom
 
-/** Ground height under (x, y) from the draped zone overlays (they cover the whole model rectangle). */
+/** Ground height under (x, y) from the draped zone overlays (they cover the whole model rectangle): the highest
+ *  surface there, as a ray cast straight down finds it. The zones' triangles are binned once on a 40 m grid, so a
+ *  lookup tests a handful of triangles; a raycast tested all of them, and the ribbons below make hundreds of lookups
+ *  (that froze the frame for a quarter of a second when the labels appeared or the drain width changed). */
 function groundFn(zones: THREE.Mesh[]) {
-  const ray = new THREE.Raycaster(), down = new THREE.Vector3(0, -1, 0);
+  const C = 40, key = (i: number, j: number) => (i + 4096) * 8192 + (j + 4096);
+  const tri: number[] = [], bins = new Map<number, number[]>(), v = new THREE.Vector3();
+  for (const m of zones) {
+    m.updateWorldMatrix(true, false);
+    const pos = m.geometry.attributes.position, idx = m.geometry.index, n = idx ? idx.count : pos.count;
+    for (let i = 0; i + 2 < n; i += 3) {
+      const t = tri.length;
+      let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+      for (let j = 0; j < 3; j++) {
+        v.fromBufferAttribute(pos, idx ? idx.getX(i + j) : i + j).applyMatrix4(m.matrixWorld);
+        tri.push(v.x, v.y, v.z);
+        x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); z0 = Math.min(z0, v.z); z1 = Math.max(z1, v.z);
+      }
+      for (let a = Math.floor(x0 / C); a <= Math.floor(x1 / C); a++)
+        for (let b = Math.floor(z0 / C); b <= Math.floor(z1 / C); b++) {
+          const k = key(a, b);
+          (bins.get(k) ?? bins.set(k, []).get(k)!).push(t);
+        }
+    }
+  }
   let last = 5;
   return (x: number, y: number) => {
-    ray.set(new THREE.Vector3(x, 600, -y), down);
-    const hit = ray.intersectObjects(zones, false)[0];
-    if (hit) last = hit.point.y;
+    const X = x, Z = -y, list = bins.get(key(Math.floor(X / C), Math.floor(Z / C)));
+    let best = -Infinity;
+    for (const t of list ?? []) {
+      const ax = tri[t], ay = tri[t + 1], az = tri[t + 2], bx = tri[t + 3], by = tri[t + 4], bz = tri[t + 5], cx = tri[t + 6], cy = tri[t + 7], cz = tri[t + 8];
+      const d = (bz - cz) * (ax - cx) + (cx - bx) * (az - cz);
+      if (Math.abs(d) < 1e-9) continue;                       // a vertical face: nothing to stand on
+      const l1 = ((bz - cz) * (X - cx) + (cx - bx) * (Z - cz)) / d, l2 = ((cz - az) * (X - cx) + (ax - cx) * (Z - cz)) / d, l3 = 1 - l1 - l2;
+      if (l1 < -1e-6 || l2 < -1e-6 || l3 < -1e-6) continue;
+      best = Math.max(best, l1 * ay + l2 * by + l3 * cy);
+    }
+    if (best > -Infinity) last = best;
     return last;
   };
 }
@@ -131,6 +161,7 @@ const loadColor = (r: number) => (r >= 1 ? BAND_COLOR.high : r >= 0.8 ? BAND_COL
 export function Overlays(p: {
   anchors: Anchors; council: XY[][]; results: any; scenario: ScenarioId; basis: Basis; controls: Controls; storm: number;
   layers: Layers; pickZone: (id: string) => void;
+  show: boolean;     // mounted behind the opening curtain (shaders compile unseen), shown once the township has grown
   reports?: { id: string; issue: string; status: string; label: string; lat: number; lon: number; sample: boolean }[];
 }) {
   const ground = useMemo(() => groundFn(p.anchors.zones), [p.anchors]);
@@ -167,13 +198,13 @@ export function Overlays(p: {
     const g = new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI / 2); g.translate(0.5, 0, -0.5);
     const mat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false,
-      uniforms: { uSize: { value: 700 } },
+      uniforms: { uSize: { value: 700 }, uFade: { value: 0 } },
       vertexShader: `varying vec2 vP; uniform float uSize; void main(){ vP = position.xz * uSize; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
-      fragmentShader: `varying vec2 vP; uniform float uSize;
+      fragmentShader: `varying vec2 vP; uniform float uSize; uniform float uFade;
         void main(){ vec2 g = abs(fract(vP / 50.0 - 0.5) - 0.5) * 50.0; float line = 1.0 - smoothstep(0.0, 1.6, min(g.x, g.y));
           vec2 e = min(abs(vP), abs(vec2(uSize, -uSize) - vP)); float edge = 1.0 - smoothstep(0.0, 6.0, min(e.x, e.y));
           vec3 c = mix(vec3(0.08, 0.12, 0.16), vec3(0.45, 0.85, 1.0), max(line * 0.35, edge));
-          gl_FragColor = vec4(c, 0.55 + 0.4 * max(line * 0.5, edge)); }`,
+          gl_FragColor = vec4(c, (0.55 + 0.4 * max(line * 0.5, edge)) * uFade); }`,
     });
     return { g, mat };
   }, []);
@@ -195,21 +226,31 @@ export function Overlays(p: {
     return ribbon([[sx, oy + Math.min(side / 2, 200)], [sx, oy], [sx, 600], [end[0], 420], end], 14, 2.6, ground);
   }, [ox, oy, side, crossPath, ground]);
   const extFlowMat = useMemo(() => chevronMaterial("#ffd27a"), []);
+  // the overlays fade in once shown; the HTML labels mount a few per frame (22 at once froze one frame), so they
+  // cascade in instead of popping
+  const fade = useRef(0);
+  const [budget, setBudget] = useState(0);
+  useEffect(() => { if (!p.show) setBudget(0); }, [p.show]);
 
   useFrame((state, dt) => {
     const t = state.clock.elapsedTime, k = Math.min(1, dt * 3);
+    fade.current = THREE.MathUtils.lerp(fade.current, p.show ? 1 : 0, Math.min(1, dt * 2.5));
+    const f = fade.current;
+    if (p.show && budget < 64) setBudget((b) => b + 3);
     const d = (camera as THREE.OrthographicCamera).zoom > baseZoom * 1.45;
     if (d !== detail) setDetail(d);
     council.mat.uniforms.uTime.value = t;
-    council.mat.uniforms.uOpacity.value = THREE.MathUtils.lerp(council.mat.uniforms.uOpacity.value, p.layers.boundary ? 1 : 0, k);
+    council.mat.uniforms.uOpacity.value = THREE.MathUtils.lerp(council.mat.uniforms.uOpacity.value, p.layers.boundary ? f : 0, k);
+    council.line.opacity = 0.9 * f;
     const storming = p.storm > 0.5;
     trunkMat.uniforms.uTime.value = t * (0.4 + 0.9 * Math.min(1.4, ratio));
     trunkMat.uniforms.uColor.value.lerp(new THREE.Color(storming ? loadColor(ratio) : "#35d0e6"), k);
     trunkMat.uniforms.uFlow.value = storming ? 1 : 0.25;
-    trunkMat.uniforms.uOpacity.value = storming && ratio >= 1 ? 0.75 + 0.2 * Math.sin(t * 4) : 0.85;
+    trunkMat.uniforms.uOpacity.value = (storming && ratio >= 1 ? 0.75 + 0.2 * Math.sin(t * 4) : 0.85) * f;
+    crossMat.uniforms.uOpacity.value = 0.9 * f;
     crossMat.uniforms.uTime.value = t * 0.8; crossMat.uniforms.uFlow.value = storming ? 1 : 0.25;
     extFlowMat.uniforms.uTime.value = t * 0.8; extFlowMat.uniforms.uFlow.value = storming ? 1 : 0.3;
-    extFlowMat.uniforms.uOpacity.value = p.layers.upstream ? 0.85 : 0;
+    extFlowMat.uniforms.uOpacity.value = p.layers.upstream ? 0.85 * f : 0;
     // upstream blocks: count follows development, footprint follows the area
     extShown.current = THREE.MathUtils.lerp(extShown.current, p.controls.dev, k);
     const n = Math.round(extShown.current * N * N), cell = side / N, m = new THREE.Matrix4();
@@ -221,7 +262,7 @@ export function Overlays(p: {
       blocks.mesh.setMatrixAt(i, m);
     }
     blocks.mesh.instanceMatrix.needsUpdate = true;
-    ext.mat.uniforms.uSize.value = side;
+    ext.mat.uniforms.uSize.value = side; ext.mat.uniforms.uFade.value = f;
   });
 
   const L = p.anchors.labels;
@@ -231,6 +272,8 @@ export function Overlays(p: {
   const ponds = sc.ponds;
   // labels never swallow clicks (their wrappers overlap zone tags); clickable tags opt back in (.tag-zone)
   const html = { zIndexRange: [4, 2] as [number, number], center: true, wrapperClass: "html-pass" };
+  let slots = 0;
+  const slot = () => slots++ < budget;
 
   return (
     <group>
@@ -249,19 +292,19 @@ export function Overlays(p: {
       <primitive object={blocks.mesh} />
       <mesh geometry={extFlowGeo} material={extFlowMat} renderOrder={7} />
 
-      {/* labels */}
-      {p.layers.labels && <>
-        {pos("label_area_A", 40) && <Html position={pos("label_area_A", 40)!} {...html}>
+      {/* labels: each takes one slot of the per-frame budget, in this order */}
+      {p.layers.labels && p.show && <>
+        {pos("label_area_A", 40) && slot() && <Html position={pos("label_area_A", 40)!} {...html}>
           <div className="tag tag-area lean-west"><b>AREA A</b><span>Shah Alam side · upstream</span></div></Html>}
         {/* the .glb's Area B tag sits on Spot 2; Area B is most of the model, so its label goes at the model's
             south-west edge, clear of the pond B tag */}
-        {<Html position={gl(AREA_B[0], ground(...AREA_B) + 40, AREA_B[1]).toArray()} {...html}>
+        {slot() && <Html position={gl(AREA_B[0], ground(...AREA_B) + 40, AREA_B[1]).toArray()} {...html}>
           <div className="tag tag-area"><b>AREA B</b><span>Klang side · downstream</span></div></Html>}
-        {p.layers.upstream && <Html position={extCentre} {...html}>
+        {p.layers.upstream && slot() && <Html position={extCentre} {...html}>
           <div className="tag tag-ext lean-west"><b>AREA A · BEYOND MODEL EDGE</b>
             <span>{Math.round(p.controls.extArea)} ha (assumed) · {Math.round(p.controls.dev * 100)} % built out</span></div></Html>}
         {[1, 2, 3].map((i) => pos(`label_spot_${i}`, 20) && (
-          <Html key={i} position={pos(`label_spot_${i}`, 20)!} {...html}>
+          slot() && <Html key={i} position={pos(`label_spot_${i}`, 20)!} {...html}>
             <div className={`tag tag-spot ${i === 1 ? "" : "req"}`} style={{ ["--ax" as any]: SPOT_AX[i], ["--lift" as any]: SPOT_LIFT[i] }}><i />
               <b>SPOT {i}</b><span>{SPOT_NOTE[i]}</span></div></Html>
         ))}
@@ -269,7 +312,7 @@ export function Overlays(p: {
         {JPS_RECORDS.map((r) => {
           const [x, y] = toModel(r.lat, r.lon);
           return (
-            <Html key={r.name} position={gl(x, ground(x, y) + 14, y).toArray()} {...html}>
+            slot() && <Html key={r.name} position={gl(x, ground(x, y) + 14, y).toArray()} {...html}>
               <div className="tag tag-record" title={`${r.kind} recorded by JPS Selangor: ${r.name}`}>
                 <i /><b>JPS RECORD</b><span>{r.kind} · {r.years}</span></div></Html>
           );
@@ -279,7 +322,7 @@ export function Overlays(p: {
           const [x, y] = toModel(r.lat, r.lon);
           if (x < -1222 || x > 1700 || y < -830 || y > 608) return null;
           return (
-            <Html key={r.id} position={gl(x, ground(x, y) + 12, y).toArray()} center zIndexRange={[3, 1]} wrapperClass="html-pass">
+            slot() && <Html key={r.id} position={gl(x, ground(x, y) + 12, y).toArray()} center zIndexRange={[3, 1]} wrapperClass="html-pass">
               <button className={`tag tag-report st-${r.status}`} title={`${r.issue} · ${r.label}${r.sample ? " · demo sample" : ""}. Open the report`}
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => { e.stopPropagation(); location.hash = `#/resident?report=${encodeURIComponent(r.id)}`; }}>
@@ -288,21 +331,21 @@ export function Overlays(p: {
         })}
         {/* zone tags stop their clicks: the canvas would read them as a click on empty ground and clear the pick */}
         {(detail || p.storm > 0.5) && Object.keys(sc.zones).map((id) => pos(`label_zone_${id}`) && (
-          <Html key={id} position={pos(`label_zone_${id}`)!} center zIndexRange={[1, 0]} wrapperClass="html-pass">
+          slot() && <Html key={id} position={pos(`label_zone_${id}`)!} center zIndexRange={[1, 0]} wrapperClass="html-pass">
             <button className="tag tag-zone" style={{ ["--b" as any]: BAND_COLOR[p.storm > 0.5 ? bandOf(id) : "base"] }}
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); p.pickZone(id); }}>{id}{(() => { const c = changeTag(zoneChange(sc.zones[id], sc)); return c && <em>{c}</em>; })()}</button></Html>
         ))}
         {(["pond_A", "pond_B"] as const).map((id) => p.anchors.ponds[id] && (
-          <Html key={id} position={[p.anchors.ponds[id][0], p.anchors.ponds[id][1] + 26, p.anchors.ponds[id][2]]} {...html}>
+          slot() && <Html key={id} position={[p.anchors.ponds[id][0], p.anchors.ponds[id][1] + 26, p.anchors.ponds[id][2]]} {...html}>
             <div className="tag tag-pond"><b>POND {id.slice(-1)}</b>
               <span>{p.storm > 0.5 ? `${m3(ponds[id].storage_required_m3)} needed` : "Retention pond (mapped)"}</span></div></Html>
         ))}
         {p.controls.pond && p.anchors.ponds.pond_whatif && (
-          <Html position={[p.anchors.ponds.pond_whatif[0], p.anchors.ponds.pond_whatif[1] + 30, p.anchors.ponds.pond_whatif[2]]} {...html}>
+          slot() && <Html position={[p.anchors.ponds.pond_whatif[0], p.anchors.ponds.pond_whatif[1] + 30, p.anchors.ponds.pond_whatif[2]]} {...html}>
             <div className="tag tag-pond whatif"><b>NEW POND</b><span>{m3(p.controls.pondSize)} · what-if</span></div></Html>
         )}
-        {detail && <Html position={gl(trunkMid[0], ground(trunkMid[0], trunkMid[1]) + 18, trunkMid[1]).toArray()} {...html}>
+        {detail && slot() && <Html position={gl(trunkMid[0], ground(trunkMid[0], trunkMid[1]) + 18, trunkMid[1]).toArray()} {...html}>
           <div className="tag tag-drain" style={{ ["--b" as any]: p.storm > 0.5 ? loadColor(ratio) : "#35d0e6" }}>
             <b>SHARED TRUNK DRAIN</b><span>{p.controls.drainTopWidth} m wide · {p.storm > 0.5 ? `${Math.round(ratio * 100)} % of capacity` : "assumed section"}</span></div></Html>}
         {p.layers.boundary && detail && <>
